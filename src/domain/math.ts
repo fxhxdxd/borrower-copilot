@@ -40,8 +40,8 @@ export function annualPercentageRate(cashflows: number[]) {
   let high = 1;
   for (let i = 0; i < 160; i += 1) {
     const midpoint = (low + high) / 2;
-    if (npv(midpoint, cashflows) > 0) low = midpoint;
-    else high = midpoint;
+    if (npv(midpoint, cashflows) > 0) high = midpoint;
+    else low = midpoint;
   }
   return ((low + high) / 2) * 12 * 100;
 }
@@ -62,4 +62,3 @@ export function aprForLoan(
 
 export const roundTo = (value: number, increment = 100) =>
   Math.max(0, Math.round(value / increment) * increment);
-
