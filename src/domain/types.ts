@@ -142,6 +142,5 @@ export type AssessmentResult = {
   reasons: Reason[];
   borrowerCopy: string;
   negotiationLine: string;
-  upsideScenario?: { monthlyIncomeUplift: number; note: string };
+  upsideScenario?: { monthlyIncomeUplift: number; plausibleRange: Interval; note: string };
 };
-

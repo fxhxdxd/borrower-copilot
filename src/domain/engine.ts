@@ -143,7 +143,11 @@ export function routeProducts(input: AssessmentInput): ProductRoute[] {
     if (purpose.includes("home") || purpose.includes("house") || purpose.includes("property purchase")) product = "home";
     else if (purpose.includes("gold")) product = "gold";
     else if (purpose.includes("business") || purpose.includes("stock") || purpose.includes("inventory")) {
-      product = isUsableCollateral(input) ? "lap" : "business";
+      product = isUsableCollateral(input) && input.collateral?.type === "property"
+        ? "lap"
+        : isUsableCollateral(input) && input.collateral?.type === "gold"
+          ? "gold"
+          : "business";
     } else product = "personal";
   }
   return [{
@@ -177,23 +181,30 @@ export function recognizeIncome(input: AssessmentInput): Interval {
       documented.push(input.bankVisibleMonthlyIncome.min, input.bankVisibleMonthlyIncome.max);
     }
     if (input.monthlyNetProfit) documented.push(input.monthlyNetProfit.min, input.monthlyNetProfit.max);
+    const vintageFactor = input.businessVintageMonths === undefined
+      ? 1
+      : input.businessVintageMonths < 24 ? 0.8
+        : input.businessVintageMonths < 36 ? 0.9 : 1;
     if (documented.length > 0) {
       return {
-        min: Math.max(0, Math.min(...documented)) + coApplicantNet,
+        min: Math.max(0, Math.min(...documented)) * vintageFactor + coApplicantNet,
         max: Math.min(reported.max, Math.max(...documented)) + coApplicantNet,
       };
     }
-    return { min: reported.min * 0.5 + coApplicantNet, max: reported.max + coApplicantNet };
+    return { min: reported.min * 0.5 * vintageFactor + coApplicantNet, max: reported.max + coApplicantNet };
   }
 
   if (input.incomeType === "informal") {
+    const frequencyFactor = input.informalPaidDaysPerMonth === undefined
+      ? 1
+      : clamp(input.informalPaidDaysPerMonth / 26, 0.5, 1);
     if (input.bankVisibleMonthlyIncome) {
       return {
-        min: Math.min(reported.min, input.bankVisibleMonthlyIncome.min) + coApplicantNet,
+        min: Math.min(reported.min, input.bankVisibleMonthlyIncome.min) * frequencyFactor + coApplicantNet,
         max: Math.min(reported.max, input.bankVisibleMonthlyIncome.max) + coApplicantNet,
       };
     }
-    return { min: coApplicantNet, max: reported.min + coApplicantNet };
+    return { min: coApplicantNet, max: reported.min * frequencyFactor + coApplicantNet };
   }
 
   const evidenceFactor = input.bankVisibleMonthlyIncome ? 0.9 : 0.7;
@@ -212,6 +223,9 @@ function conservativeIncome(input: AssessmentInput): Interval {
   if (input.employmentStatus === "between-jobs") min = 0;
   if (input.informalActiveMonths !== undefined && input.informalActiveMonths < 9) {
     min *= input.informalActiveMonths / 12;
+  }
+  if (input.informalPaidDaysPerMonth !== undefined && input.incomeType === "informal") {
+    min *= clamp(input.informalPaidDaysPerMonth / 26, 0.5, 1);
   }
   if (input.coApplicant?.willing && input.coApplicant.documented) {
     const contribution = Math.max(0, input.coApplicant.monthlyIncome - input.coApplicant.monthlyObligations);
@@ -234,11 +248,16 @@ function upcomingMonthly(input: AssessmentInput) {
   return input.upcomingExpense.amount / Math.max(1, input.upcomingExpense.monthsUntilDue);
 }
 
-function safeEmiFor(input: AssessmentInput, income: Interval, ratio: Interval): Interval {
+function effectiveDebtPayments(input: AssessmentInput) {
+  const scheduled = input.activeDebts?.reduce((sum, debt) => sum + Math.max(0, debt.emi), 0) ?? 0;
+  return Math.max(input.currentDebtPayments, scheduled);
+}
+
+function safeEmiFor(input: AssessmentInput, income: Interval, ratio: Interval, existingDebt: number): Interval {
   const committed = upcomingMonthly(input);
   const calculate = (monthlyIncome: number, safeRatio: number) => Math.max(0, Math.min(
-    safeRatio * monthlyIncome - input.currentDebtPayments,
-    monthlyIncome - input.essentialExpenses - input.currentDebtPayments - monthlyIncome * 0.1 - committed,
+    safeRatio * monthlyIncome - existingDebt,
+    monthlyIncome - input.essentialExpenses - existingDebt - monthlyIncome * 0.1 - committed,
   ));
   return {
     min: calculate(income.min, ratio.min),
@@ -357,8 +376,9 @@ function stressFor(
   routes: ProductRoute[],
   safeIncome: Interval,
   requestedEmi: number,
+  existingDebt: number,
 ): StressResult {
-  const totalDebt = input.currentDebtPayments + requestedEmi;
+  const totalDebt = existingDebt + requestedEmi;
   const normalIncome = safeIncome.min;
   const normalResidual = normalIncome - input.essentialExpenses - totalDebt;
   const floating = routes.some((route) => configFor(route.product, input).rateType === "floating");
@@ -370,7 +390,7 @@ function stressFor(
   if (floating) {
     kind = "rate-rise";
     label = "Rates rise 2 percentage points";
-    stressedDebt = input.currentDebtPayments + routeWeights(routes, input.requestedAmount).reduce((sum, item) => {
+    stressedDebt = existingDebt + routeWeights(routes, input.requestedAmount).reduce((sum, item) => {
       const config = configFor(item.route.product, input);
       const rate = rateBandFor(item.route.product, input).max + 2;
       return sum + emiForPrincipal(item.requested, rate, config.tenureMonths.prudent);
@@ -416,11 +436,12 @@ function copyFor(input: AssessmentInput, verdict: AssessmentResult["verdict"], r
 
 export function assessBorrower(input: AssessmentInput): AssessmentResult {
   const routes = routeProducts(input);
+  const existingDebt = effectiveDebtPayments(input);
   const recognized = recognizeIncome(input);
   const foir = FOIR[input.incomeType];
   const lenderEmi = {
-    min: Math.max(0, recognized.min * foir.min - input.currentDebtPayments),
-    max: Math.max(0, recognized.max * foir.max - input.currentDebtPayments),
+    min: Math.max(0, recognized.min * foir.min - existingDebt),
+    max: Math.max(0, recognized.max * foir.max - existingDebt),
   };
   const lenderAmount = {
     min: capacityFromEmi(lenderEmi.min, input, routes, "high", "max"),
@@ -428,17 +449,19 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
   };
   const safeIncome = conservativeIncome(input);
   const safeRatio = safeRatioFor(input);
-  const safeEmi = safeEmiFor(input, safeIncome, safeRatio);
+  const safeEmi = safeEmiFor(input, safeIncome, safeRatio, existingDebt);
   const safeAmount = {
     min: capacityFromEmi(safeEmi.min, input, routes, "high", "prudent"),
     max: capacityFromEmi(safeEmi.max, input, routes, "high", "prudent"),
   };
   const requestedEmi = emiForRequest(input, routes);
   const unresolved = Boolean(input.delinquency && !input.delinquency.resolved && input.delinquency.unresolvedAmount > 0);
-  const highCostCount = input.activeDebts?.filter((debt) => debt.highCost).length ?? 0;
+  const revolvingCardRisk = input.cardUtilisationPercent !== undefined && input.cardUtilisationPercent >= 75 && input.cardPaidInFull === false;
+  const highCostCount = (input.activeDebts?.filter((debt) => debt.balance > 0 && (debt.highCost || (debt.annualRate ?? 0) >= 24)).length ?? 0) + (revolvingCardRisk ? 1 : 0);
+  const recentUnresolved = unresolved && (input.delinquency?.monthsAgo ?? 12) <= 3;
   const hardStop = safeEmi.min <= 0 ||
-    input.essentialExpenses + input.currentDebtPayments >= safeIncome.min ||
-    (input.recentPaymentIssue && unresolved && highCostCount >= 2);
+    input.essentialExpenses + existingDebt >= safeIncome.min ||
+    (input.recentPaymentIssue && recentUnresolved && highCostCount >= 2);
   const verdict = hardStop
     ? "DONT_BORROW"
     : input.requestedAmount > safeAmount.min
@@ -452,13 +475,13 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
   const rateBand = combinedRateBand(input, routes);
   const aprBand = aprBandFor(input, routes, rateBand, recommendedTenureMonths);
   const missing = missingEvidence(input, routes);
-  const stress = stressFor(input, routes, safeIncome, requestedEmi);
+  const stress = stressFor(input, routes, safeIncome, requestedEmi, existingDebt);
   const mismatch = input.consideredProduct !== "not-sure" &&
     !routes.some((route) => route.product === input.consideredProduct)
     ? `${productLabel(input.consideredProduct)} does not match the recommended ${routes.map((route) => route.label).join(" + ")} route.`
     : undefined;
   const bindingConstraint = hardStop
-    ? unresolved && highCostCount >= 2 ? "unresolved payment issue and stacked high-cost debt" : "monthly cash flow"
+    ? recentUnresolved && highCostCount >= 2 ? "unresolved payment issue and stacked high-cost debt" : "monthly cash flow"
     : routes.length === 1 && input.vehicle && safeAmount.min >= input.vehicle.price - input.vehicle.downPayment ? "asset price and down payment"
       : safeEmi.min < lenderEmi.min ? "borrower-safe EMI ceiling" : "lender-recognized income";
 
@@ -466,7 +489,7 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     {
       ruleId: "LEND-01",
       title: "Indicative lender EMI headroom",
-      calculation: `${Math.round(lenderEmi.min).toLocaleString("en-IN")}–${Math.round(lenderEmi.max).toLocaleString("en-IN")} = recognized income × ${(foir.min * 100).toFixed(0)}–${(foir.max * 100).toFixed(0)}% − ₹${input.currentDebtPayments.toLocaleString("en-IN")} existing repayments.`,
+      calculation: `${Math.round(lenderEmi.min).toLocaleString("en-IN")}–${Math.round(lenderEmi.max).toLocaleString("en-IN")} = recognized income × ${(foir.min * 100).toFixed(0)}–${(foir.max * 100).toFixed(0)}% − ₹${existingDebt.toLocaleString("en-IN")} existing repayments.`,
     },
     {
       ruleId: "SAFE-01",
@@ -480,10 +503,13 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     },
   ];
 
+  const endingSoon = input.activeDebts?.filter((debt) => debt.monthsLeft !== undefined && debt.monthsLeft <= 3).sort((a, b) => (a.monthsLeft ?? 99) - (b.monthsLeft ?? 99))[0];
   const immediateAction = verdict === "DONT_BORROW"
     ? "Pause the new application; clear the live payment issue and reduce high-cost debt before reassessing."
     : verdict === "BORROW_LESS"
-      ? `Cap the plan near ₹${roundTo(safeAmount.min, 1_000).toLocaleString("en-IN")} or reduce the scope.`
+      ? endingSoon
+        ? `Wait ${endingSoon.monthsLeft} month${endingSoon.monthsLeft === 1 ? "" : "s"} for ${endingSoon.label} to end, then reassess before adding a new EMI.`
+        : `Cap the plan near ₹${roundTo(safeAmount.min, 1_000).toLocaleString("en-IN")} or reduce the scope.`
       : "The request fits the conservative amount; compare KFS documents before choosing a lender.";
 
   return {
@@ -513,7 +539,12 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     upsideScenario: input.expectedNetIncomeUplift && input.expectedNetIncomeUplift > 0
       ? {
           monthlyIncomeUplift: input.expectedNetIncomeUplift,
-          note: "Shown as upside only. It is excluded from lender and borrower-safe base capacity.",
+          plausibleRange: input.upliftEvidence === "strong"
+            ? { min: input.expectedNetIncomeUplift * 0.75, max: input.expectedNetIncomeUplift }
+            : input.upliftEvidence === "weak"
+              ? { min: 0, max: input.expectedNetIncomeUplift * 0.5 }
+              : { min: 0, max: input.expectedNetIncomeUplift },
+          note: "Shown as upside only. The evidence-adjusted range is excluded from lender and borrower-safe base capacity.",
         }
       : undefined,
   };

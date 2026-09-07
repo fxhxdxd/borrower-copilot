@@ -144,7 +144,7 @@ export function Results({ input, result, onEdit, onHome }: Props) {
           <small>Shock magnitude is our borrower-safety judgment, not a regulatory rule.</small>
         </article>
 
-        {result.upsideScenario && <article className="result-card upside-card"><span className="eyebrow">Upside only</span><h2>+{formatRupees(result.upsideScenario.monthlyIncomeUplift)}/month</h2><p>{result.upsideScenario.note}</p></article>}
+        {result.upsideScenario && <article className="result-card upside-card"><span className="eyebrow">Upside only</span><h2>{formatRange(result.upsideScenario.plausibleRange)}/month</h2><p>{result.upsideScenario.note} Applicant estimate: {formatRupees(result.upsideScenario.monthlyIncomeUplift)}.</p></article>}
       </section>
 
       {result.missingEvidence.length > 0 && <section className="confidence-section"><div><p className="eyebrow">Make this answer tighter</p><h2>{result.missingEvidence.length} evidence gap{result.missingEvidence.length > 1 ? "s" : ""} widened your result.</h2></div><ul>{result.missingEvidence.map((item) => <li key={item}>{item}</li>)}</ul></section>}
@@ -153,4 +153,3 @@ export function Results({ input, result, onEdit, onHome }: Props) {
     </div> : <div className="card-view"><div className="card-view-heading"><div><p className="eyebrow">Branch-ready summary</p><h1>Keep the conversation on your numbers.</h1></div><button type="button" className="button primary" onClick={() => window.print()}>Print / save PDF</button></div><NegotiationCard input={input} result={result} /></div>}
   </main>;
 }
-
