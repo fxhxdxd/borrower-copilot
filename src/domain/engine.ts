@@ -366,7 +366,7 @@ function missingEvidence(input: AssessmentInput, routes: ProductRoute[]) {
 }
 
 function confidenceFor(missing: string[]) {
-  if (missing.length <= 1) return "high" as const;
+  if (missing.length === 0) return "high" as const;
   if (missing.length <= 3) return "medium" as const;
   return "low" as const;
 }
