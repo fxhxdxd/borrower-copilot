@@ -44,7 +44,7 @@ function fullBand(config: ProductConfig): Interval {
 export function creditTier(input: AssessmentInput): RateTier | "unknown" {
   const credit = input.creditStatus;
   if (credit.kind === "unknown") return "unknown";
-  if (credit.kind === "no-history") return "uncertain";
+  if (credit.kind === "no-history") return "unknown";
   if (credit.kind === "band") {
     if (credit.band === "excellent" || credit.band === "good") return "strong";
     if (credit.band === "fair") return "standard";
@@ -459,7 +459,7 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     : undefined;
   const bindingConstraint = hardStop
     ? unresolved && highCostCount >= 2 ? "unresolved payment issue and stacked high-cost debt" : "monthly cash flow"
-    : input.vehicle && safeAmount.min >= input.vehicle.price - input.vehicle.downPayment ? "asset price and down payment"
+    : routes.length === 1 && input.vehicle && safeAmount.min >= input.vehicle.price - input.vehicle.downPayment ? "asset price and down payment"
       : safeEmi.min < lenderEmi.min ? "borrower-safe EMI ceiling" : "lender-recognized income";
 
   const reasons: Reason[] = [

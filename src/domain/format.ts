@@ -4,13 +4,15 @@ export const formatRupees = (value: number) => {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(Math.max(0, value));
+  }).format(value);
 };
 
 export const formatCompactRupees = (value: number) => {
-  if (value >= 10_000_000) return `₹${(value / 10_000_000).toFixed(value % 10_000_000 ? 1 : 0)}Cr`;
-  if (value >= 100_000) return `₹${(value / 100_000).toFixed(value % 100_000 ? 1 : 0)}L`;
-  if (value >= 1_000) return `₹${(value / 1_000).toFixed(value % 1_000 ? 1 : 0)}k`;
+  const sign = value < 0 ? "−" : "";
+  const absolute = Math.abs(value);
+  if (absolute >= 10_000_000) return `${sign}₹${(absolute / 10_000_000).toFixed(absolute % 10_000_000 ? 1 : 0)}Cr`;
+  if (absolute >= 100_000) return `${sign}₹${(absolute / 100_000).toFixed(absolute % 100_000 ? 1 : 0)}L`;
+  if (absolute >= 1_000) return `${sign}₹${(absolute / 1_000).toFixed(absolute % 1_000 ? 1 : 0)}k`;
   return formatRupees(value);
 };
 
@@ -21,4 +23,3 @@ export const formatRange = (range: { min: number; max: number }, compact = false
 };
 
 export const formatPercent = (value: number, digits = 1) => `${(value * 100).toFixed(digits)}%`;
-
