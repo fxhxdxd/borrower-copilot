@@ -58,6 +58,16 @@ new lender EMI headroom = lender-recognized income × FOIR − current repayment
 
 The engine reconciles the core repayment answer against itemized debt EMIs and uses the larger total. Product tenure, loan-to-value, purchase price, down payment, and collateral then cap principal. The displayed binding constraint is one of cash flow, borrower-safe EMI, lender-recognized income, asset contribution, collateral, tenure, or unresolved debt distress.
 
+### `TENURE-01` Modeled age-at-loan-end guardrail — our judgment
+
+Advertised maximum tenure is capped by age at the modeled end of the loan:
+
+- Home/LAP: age 70.
+- Gold: age 75.
+- Other products: age 60 for salaried income and 65 for other income types.
+
+If fewer than six modeled repayment months remain, the product has no modeled tenure and the result is `DON'T BORROW`. These are conservative V1 modeling boundaries—not universal lender eligibility rules. Actual lender retirement-age, succession, pension, co-applicant, and product policies differ.
+
 ## Borrower-safe view
 
 ### `SAFE-01` Safe debt-service ratio — our judgment
@@ -161,6 +171,8 @@ Reference LTV caps used in V1: home 80%, LAP 60%, gold 75%, new vehicle 90%, use
 - time 0: sanctioned principal minus mandatory upfront lender charges and routed third-party charges;
 - later periods: EMIs plus recurring mandatory charges.
 
+For split facilities, V1 builds one combined cash-flow series: each component contributes its own fee, rate, EMI, and actual prudent term. It does not calculate APR from a blended rate over an invented common tenure.
+
 GST is shown separately when applicable because the exact taxable charge is unknown during assessment. The unit test reproduces RBI's worked example—₹20,000 sanctioned, ₹400 upfront, ₹970 × 24 payments—at approximately **17.07% APR**.
 
 ## Stress
@@ -228,4 +240,3 @@ Confidence describes the precision of this assessment, not the borrower's charac
 - A single confidence label summarizes V1; a production version should show separate confidence for amount, price, and route.
 - Results exist only in React memory. Refreshing or closing the page clears them.
 - The stress test is one interpretable shock, not a simulation of unemployment, health events, collateral loss, or simultaneous shocks.
-

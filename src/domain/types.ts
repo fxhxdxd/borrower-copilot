@@ -131,6 +131,7 @@ export type AssessmentResult = {
   useAmount: number;
   requestedEmi: number;
   recommendedTenureMonths: number;
+  recommendedTenureLabel: string;
   rateBand: Interval;
   aprBand: Interval;
   routes: ProductRoute[];

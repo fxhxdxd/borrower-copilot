@@ -55,7 +55,7 @@ export function NegotiationCard({ input, result }: { input: AssessmentInput; res
 
     <section className="card-headlines">
       <div className="card-block amount-block"><span>1 · AMOUNT</span><AmountComparison result={result} /></div>
-      <div className="card-block"><span>2 · EMI + TENURE</span><strong>{formatRupees(result.safeNewEmi.min)}<small> safe new EMI / month</small></strong><p>{result.recommendedTenureMonths / 12} years recommended</p></div>
+      <div className="card-block"><span>2 · EMI + TENURE</span><strong>{formatRupees(result.safeNewEmi.min)}<small> safe new EMI / month</small></strong><p>{result.recommendedTenureLabel}</p></div>
       <div className="card-block"><span>3 · FAIR PRICE</span><strong>{result.rateBand.min.toFixed(2)}–{result.rateBand.max.toFixed(2)}%<small> nominal</small></strong><p>{result.aprBand.min.toFixed(2)}–{result.aprBand.max.toFixed(2)}% indicative APR</p></div>
       <div className="card-block route-block"><span>4 · PRODUCT ROUTE</span>{result.routes.map((route) => <div key={`${route.product}-${route.amount}`}><strong>{route.label}</strong>{route.amount && <small>{formatCompactRupees(route.amount)}</small>}<p>{route.rationale}</p></div>)}</div>
     </section>
@@ -119,7 +119,7 @@ export function Results({ input, result, onEdit, onHome }: Props) {
           <div className="result-card-heading"><div><span>02</span><h2>Monthly limit</h2></div></div>
           <strong className="big-number">{formatRupees(result.safeNewEmi.min)}</strong>
           <p>safe new EMI each month</p>
-          <div className="inline-metrics"><div><span>REQUESTED EMI</span><strong>{formatRupees(result.requestedEmi)}</strong></div><div><span>TENURE</span><strong>{result.recommendedTenureMonths / 12} years</strong></div></div>
+          <div className="inline-metrics"><div><span>REQUESTED EMI</span><strong>{formatRupees(result.requestedEmi)}</strong></div><div><span>TENURE</span><strong>{result.recommendedTenureLabel}</strong></div></div>
           <details><summary>See the calculation</summary><p>{result.reasons[1].calculation}</p><code>{result.reasons[1].ruleId}</code></details>
         </article>
 

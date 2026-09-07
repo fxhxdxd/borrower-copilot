@@ -33,7 +33,7 @@ The ten core questions are prefilled. Relevant adaptive modules are employment c
 |---|---:|
 | Verdict | **BORROW** |
 | Lender may offer | ₹18,22,000–₹21,89,000 |
-| Safe capacity | ₹9,22,000 |
+| Safe capacity | ₹9,21,000 |
 | You should use | **₹8,00,000** — capped at the actual request |
 | Safe new EMI | ₹24,500/month |
 | Requested EMI at prudent edge | ₹21,264/month |
@@ -86,17 +86,17 @@ In addition to the core set, Ravi sees delinquency/card checks first, collateral
 |---|---:|
 | Verdict | **BORROW LESS** |
 | Lender may offer | ₹8,18,000–₹29,72,000 |
-| Safe capacity | ₹5,91,000–₹11,82,000 |
-| You should use | **₹5,91,000** conservative edge |
+| Safe capacity | ₹5,90,000–₹11,81,000 |
+| You should use | **₹5,90,000** conservative edge |
 | Shared safe new EMI | ₹11,000–₹22,000/month |
 | Requested split EMI | ₹27,924/month |
-| Recommended blended tenure | 60 months |
+| Recommended component tenures | 60 months vehicle · 120 months stock/LAP |
 | Blended fair nominal rate | 8.52–15% |
-| Indicative APR | 8.73–15.92% |
+| Indicative APR | 8.93–15.16% |
 | Stress | **Fail** — floating LAP rate rises by 2 percentage points |
 | Normal residual at full request | −₹12,924/month |
-| Stressed residual | −₹14,688/month |
-| Stressed total debt ratio | 74.2% |
+| Stressed residual | −₹14,138/month |
+| Stressed total debt ratio | 72.8% |
 | Confidence | High for these entered assumptions |
 
 The lender range is intentionally wide because no credit history prevents narrowing and the property supports a much larger theoretical ceiling. It is not the recommended amount.
@@ -106,7 +106,7 @@ The lender range is intentionally wide because no credit history prevents narrow
 1. **₹5,00,000 commercial-vehicle finance.** The new delivery vehicle secures itself.
 2. **₹10,00,000 secured stock finance / LAP.** The shop is considered only for the stock portion, and the amount must still fit documented cash flow.
 
-The engine computes one weighted payment factor against one shared ₹11,000 conservative EMI ceiling. It does not add a vehicle-loan capacity to a separate LAP capacity.
+The engine computes one weighted payment factor against one shared ₹11,000 conservative EMI ceiling while retaining five years for the vehicle and ten years for stock/LAP. It does not add a vehicle-loan capacity to a separate LAP capacity. Its APR likewise uses each component's actual cash flows rather than an invented blended tenure.
 
 ### Negotiation Card message
 
@@ -166,4 +166,3 @@ Hard stop: essentials plus current EMI already exceed conservative income, and a
 > The scooter may improve income, but another EMI is unsafe until the bounced payment and app-loan burden are resolved.
 
 Next steps: cure the bounced EMI, obtain closure/current statements for each app loan, direct spare cash to the highest-cost balance, and reassess after repayments fall. The expected uplift remains an evidence-adjusted ₹0–₹4,000/month upside—not base affordability.
-

@@ -24,6 +24,13 @@ export const RULES: RuleDefinition[] = [
     unknownBehavior: "Uses the full applicable interval.",
   },
   {
+    id: "TENURE-01",
+    label: "Modeled age-at-loan-end guardrail",
+    sourceType: "judgment",
+    rationale: "Prevents a long advertised tenure from being applied when the borrower's age leaves a shorter modeled repayment window.",
+    unknownBehavior: "Age is a required core answer; no age is invented.",
+  },
+  {
     id: "SAFE-01",
     label: "Borrower-safe debt-service ratio",
     sourceType: "judgment",
@@ -85,4 +92,3 @@ export const RULES: RuleDefinition[] = [
 ];
 
 export const RULE_BY_ID = Object.fromEntries(RULES.map((rule) => [rule.id, rule]));
-

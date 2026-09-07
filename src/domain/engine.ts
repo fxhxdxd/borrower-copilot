@@ -5,7 +5,7 @@ import {
   type ProductConfig,
   type RateTier,
 } from "./marketData";
-import { aprForLoan, clamp, emiForPrincipal, roundTo } from "./math";
+import { annualPercentageRate, clamp, emiForPrincipal, roundDownTo, roundTo } from "./math";
 import type {
   AssessmentInput,
   AssessmentResult,
@@ -61,6 +61,23 @@ function configFor(product: ProductId, input: AssessmentInput): ProductConfig {
     return commercialVehicleConfig(input.vehicle?.condition ?? "new");
   }
   return PRODUCT_CONFIG[product];
+}
+
+function modeledEndAge(product: ProductId, input: AssessmentInput) {
+  if (product === "home" || product === "lap") return 70;
+  if (product === "gold") return 75;
+  return input.incomeType === "salaried" ? 60 : 65;
+}
+
+export function availableTenureMonths(
+  product: ProductId,
+  input: AssessmentInput,
+  kind: "prudent" | "max" = "prudent",
+) {
+  const config = configFor(product, input);
+  const ageLimitedMonths = Math.floor((modeledEndAge(product, input) - input.age) * 12);
+  if (ageLimitedMonths < 6) return 0;
+  return Math.min(config.tenureMonths[kind], ageLimitedMonths);
 }
 
 export function rateBandFor(product: ProductId, input: AssessmentInput): Interval {
@@ -301,9 +318,10 @@ function paymentPerRupee(
   tenureKind: "prudent" | "max",
 ) {
   return routeWeights(routes, input.requestedAmount).reduce((sum, item) => {
-    const config = configFor(item.route.product, input);
     const band = rateBandFor(item.route.product, input);
-    return sum + item.weight * emiForPrincipal(1, band[rateEdge === "low" ? "min" : "max"], config.tenureMonths[tenureKind]);
+    const months = availableTenureMonths(item.route.product, input, tenureKind);
+    if (months === 0) return Number.POSITIVE_INFINITY;
+    return sum + item.weight * emiForPrincipal(1, band[rateEdge === "low" ? "min" : "max"], months);
   }, 0);
 }
 
@@ -320,9 +338,9 @@ function capacityFromEmi(
 
 function emiForRequest(input: AssessmentInput, routes: ProductRoute[]) {
   return routeWeights(routes, input.requestedAmount).reduce((sum, item) => {
-    const config = configFor(item.route.product, input);
     const rate = rateBandFor(item.route.product, input).max;
-    return sum + emiForPrincipal(item.requested, rate, config.tenureMonths.prudent);
+    const months = availableTenureMonths(item.route.product, input, "prudent");
+    return sum + (months === 0 ? Number.POSITIVE_INFINITY : emiForPrincipal(item.requested, rate, months));
   }, 0);
 }
 
@@ -337,19 +355,29 @@ function combinedRateBand(input: AssessmentInput, routes: ProductRoute[]): Inter
   );
 }
 
-function aprBandFor(input: AssessmentInput, routes: ProductRoute[], rateBand: Interval, months: number): Interval {
-  const fee = routes.reduce(
-    (result, route) => {
-      const range = configFor(route.product, input).feePercent;
-      return { min: Math.min(result.min, range.min), max: Math.max(result.max, range.max) };
-    },
-    { min: Number.POSITIVE_INFINITY, max: 0 },
-  );
-  const principal = Math.max(10_000, input.requestedAmount);
-  return {
-    min: aprForLoan(principal, rateBand.min, months, fee.min),
-    max: aprForLoan(principal, rateBand.max, months, fee.max),
-  };
+function aprForRoutes(input: AssessmentInput, routes: ProductRoute[], edge: "min" | "max") {
+  const items = routeWeights(routes, input.requestedAmount).map((item) => {
+    const config = configFor(item.route.product, input);
+    return {
+      principal: item.requested,
+      rate: rateBandFor(item.route.product, input)[edge],
+      feePercent: config.feePercent[edge],
+      months: availableTenureMonths(item.route.product, input, "prudent"),
+    };
+  });
+  if (items.some((item) => item.months === 0)) return 0;
+  const maxMonths = Math.max(...items.map((item) => item.months));
+  const cashflows = Array(maxMonths + 1).fill(0) as number[];
+  cashflows[0] = items.reduce((sum, item) => sum + item.principal * (1 - item.feePercent / 100), 0);
+  for (const item of items) {
+    const emi = emiForPrincipal(item.principal, item.rate, item.months);
+    for (let month = 1; month <= item.months; month += 1) cashflows[month] -= emi;
+  }
+  return annualPercentageRate(cashflows);
+}
+
+function aprBandFor(input: AssessmentInput, routes: ProductRoute[]): Interval {
+  return { min: aprForRoutes(input, routes, "min"), max: aprForRoutes(input, routes, "max") };
 }
 
 function missingEvidence(input: AssessmentInput, routes: ProductRoute[]) {
@@ -392,8 +420,9 @@ function stressFor(
     label = "Rates rise 2 percentage points";
     stressedDebt = existingDebt + routeWeights(routes, input.requestedAmount).reduce((sum, item) => {
       const config = configFor(item.route.product, input);
-      const rate = rateBandFor(item.route.product, input).max + 2;
-      return sum + emiForPrincipal(item.requested, rate, config.tenureMonths.prudent);
+      const rate = rateBandFor(item.route.product, input).max + (config.rateType === "floating" ? 2 : 0);
+      const months = availableTenureMonths(item.route.product, input, "prudent");
+      return sum + (months === 0 ? Number.POSITIVE_INFINITY : emiForPrincipal(item.requested, rate, months));
     }, 0);
   } else if (input.incomeType === "informal" || input.incomeType === "mixed" || input.variableIncomeShare) {
     kind = "low-month-drop";
@@ -454,26 +483,36 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     min: capacityFromEmi(safeEmi.min, input, routes, "high", "prudent"),
     max: capacityFromEmi(safeEmi.max, input, routes, "high", "prudent"),
   };
+  const safeAmountRounded = {
+    min: roundDownTo(safeAmount.min, 1_000),
+    max: roundDownTo(safeAmount.max, 1_000),
+  };
   const requestedEmi = emiForRequest(input, routes);
+  const noAvailableTenure = routes.some((route) => availableTenureMonths(route.product, input, "max") === 0);
   const unresolved = Boolean(input.delinquency && !input.delinquency.resolved && input.delinquency.unresolvedAmount > 0);
   const revolvingCardRisk = input.cardUtilisationPercent !== undefined && input.cardUtilisationPercent >= 75 && input.cardPaidInFull === false;
   const highCostCount = (input.activeDebts?.filter((debt) => debt.balance > 0 && (debt.highCost || (debt.annualRate ?? 0) >= 24)).length ?? 0) + (revolvingCardRisk ? 1 : 0);
   const recentUnresolved = unresolved && (input.delinquency?.monthsAgo ?? 12) <= 3;
-  const hardStop = safeEmi.min <= 0 ||
+  const hardStop = noAvailableTenure || safeEmi.min <= 0 ||
     input.essentialExpenses + existingDebt >= safeIncome.min ||
     (input.recentPaymentIssue && recentUnresolved && highCostCount >= 2);
   const verdict = hardStop
     ? "DONT_BORROW"
-    : input.requestedAmount > safeAmount.min
+    : input.requestedAmount > safeAmountRounded.min
       ? "BORROW_LESS"
       : "BORROW";
-  const useAmount = verdict === "DONT_BORROW" ? 0 : roundTo(Math.min(input.requestedAmount, safeAmount.min), 1_000);
-  const primaryConfig = configFor(routes[0].product, input);
+  const useAmount = verdict === "DONT_BORROW" ? 0 : Math.min(input.requestedAmount, safeAmountRounded.min);
   const recommendedTenureMonths = routes.length > 1
-    ? Math.min(...routes.map((route) => configFor(route.product, input).tenureMonths.prudent))
-    : primaryConfig.tenureMonths.prudent;
+    ? Math.min(...routes.map((route) => availableTenureMonths(route.product, input, "prudent")))
+    : availableTenureMonths(routes[0].product, input, "prudent");
+  const recommendedTenureLabel = routes.length > 1
+    ? routes.map((route) => {
+        const months = availableTenureMonths(route.product, input, "prudent");
+        return `${route.label}: ${months === 0 ? "not available" : `${months / 12} years`}`;
+      }).join(" · ")
+    : recommendedTenureMonths === 0 ? "No modeled tenure" : `${recommendedTenureMonths / 12} years`;
   const rateBand = combinedRateBand(input, routes);
-  const aprBand = aprBandFor(input, routes, rateBand, recommendedTenureMonths);
+  const aprBand = aprBandFor(input, routes);
   const missing = missingEvidence(input, routes);
   const stress = stressFor(input, routes, safeIncome, requestedEmi, existingDebt);
   const mismatch = input.consideredProduct !== "not-sure" &&
@@ -481,7 +520,8 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     ? `${productLabel(input.consideredProduct)} does not match the recommended ${routes.map((route) => route.label).join(" + ")} route.`
     : undefined;
   const bindingConstraint = hardStop
-    ? recentUnresolved && highCostCount >= 2 ? "unresolved payment issue and stacked high-cost debt" : "monthly cash flow"
+    ? noAvailableTenure ? "age and available product tenure"
+      : recentUnresolved && highCostCount >= 2 ? "unresolved payment issue and stacked high-cost debt" : "monthly cash flow"
     : routes.length === 1 && input.vehicle && safeAmount.min >= input.vehicle.price - input.vehicle.downPayment ? "asset price and down payment"
       : safeEmi.min < lenderEmi.min ? "borrower-safe EMI ceiling" : "lender-recognized income";
 
@@ -505,11 +545,13 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
 
   const endingSoon = input.activeDebts?.filter((debt) => debt.monthsLeft !== undefined && debt.monthsLeft <= 3).sort((a, b) => (a.monthsLeft ?? 99) - (b.monthsLeft ?? 99))[0];
   const immediateAction = verdict === "DONT_BORROW"
-    ? "Pause the new application; clear the live payment issue and reduce high-cost debt before reassessing."
+    ? noAvailableTenure
+      ? "This product has no modeled repayment tenure at your age; confirm age eligibility or consider a non-debt alternative."
+      : "Pause the new application; clear the live payment issue and reduce high-cost debt before reassessing."
     : verdict === "BORROW_LESS"
       ? endingSoon
         ? `Wait ${endingSoon.monthsLeft} month${endingSoon.monthsLeft === 1 ? "" : "s"} for ${endingSoon.label} to end, then reassess before adding a new EMI.`
-        : `Cap the plan near ₹${roundTo(safeAmount.min, 1_000).toLocaleString("en-IN")} or reduce the scope.`
+        : `Cap the plan near ₹${safeAmountRounded.min.toLocaleString("en-IN")} or reduce the scope.`
       : "The request fits the conservative amount; compare KFS documents before choosing a lender.";
 
   return {
@@ -521,10 +563,11 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     safeIncome,
     safeRatio,
     safeNewEmi: safeEmi,
-    safeAmount: { min: roundTo(safeAmount.min, 1_000), max: roundTo(safeAmount.max, 1_000) },
+    safeAmount: safeAmountRounded,
     useAmount,
     requestedEmi,
     recommendedTenureMonths,
+    recommendedTenureLabel,
     rateBand,
     aprBand,
     routes,

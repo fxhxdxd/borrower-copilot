@@ -62,3 +62,6 @@ export function aprForLoan(
 
 export const roundTo = (value: number, increment = 100) =>
   Math.max(0, Math.round(value / increment) * increment);
+
+export const roundDownTo = (value: number, increment = 100) =>
+  Math.max(0, Math.floor(value / increment) * increment);

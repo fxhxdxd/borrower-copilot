@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { activeAdaptiveModules } from "../domain/questions";
 import type { AssessmentInput, CreditStatus, ProductId } from "../domain/types";
 import type { PersonaPreset } from "../domain/presets";
+import { validateAssessment } from "../domain/validation";
 
 type Props = {
   initialInput?: AssessmentInput;
@@ -310,6 +311,9 @@ export function AssessmentFlow({ initialInput, persona, onBack, onComplete }: Pr
     if (step === 2 && input.creditStatus.kind === "exact" && (input.creditStatus.score < 300 || input.creditStatus.score > 900)) {
       return "A credit score must be between 300 and 900.";
     }
+    if (step === STEPS.length - 1) {
+      return validateAssessment(input)[0]?.message ?? "";
+    }
     return "";
   };
 
@@ -437,4 +441,3 @@ export function AssessmentFlow({ initialInput, persona, onBack, onComplete }: Pr
     </main>
   );
 }
-

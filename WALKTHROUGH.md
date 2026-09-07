@@ -26,7 +26,7 @@ Open Priya's result.
 
 - Verdict: Borrow.
 - Lender range: ₹18.22L–₹21.89L.
-- Safe capacity: ₹9.22L; “use” remains her ₹8L request.
+- Safe capacity: ₹9.21L; “use” remains her ₹8L request.
 - Safe new EMI: ₹24,500.
 - Stress: tight under a 20% three-month income fall.
 
@@ -81,4 +81,3 @@ Close with limitations: no lender-specific approval model, bureau pull, statemen
 3. Bank-statement and ITR evidence extraction with borrower confirmation before calculations change.
 4. Lender-specific rate/version feeds and automated stale-source warnings.
 5. Kannada and Hindi copy reviewed with borrowers and branch staff.
-
