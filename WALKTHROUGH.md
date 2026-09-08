@@ -118,24 +118,39 @@ The focused suite covers financial math, interval behavior, routing, hard stops,
 
 Finish by reviewing the limitations shown in the product and documentation. Borrower Copilot does not predict lender approval, pull a bureau report, parse financial documents, or guarantee a live rate. A lender's current Key Facts Statement remains authoritative.
 
-## Cut from the V1 scope
+## What I would build next
 
-The following features were deliberately excluded so V1 could prioritize lending judgment, explainability, and a reliable end-to-end flow:
+The next product bet is **Offer Check**: a borrower returns with a lender's Key Facts Statement and checks the real offer against the plan created here.
 
-- Standalone lender-offer entry and KFS comparison.
-- OCR or import of statements, ITRs, bureau reports, and KFS documents.
-- Saved accounts, history, sharing, backend storage, and production AI.
-- Lender-specific eligibility or sanction-probability models.
-- Deep adaptive paths for home, gold, personal-car, and borrowers beyond the supplied cases.
-- Multi-shock simulation and localized-language copy.
-- Broad Playwright and cross-browser automation; V1 uses focused domain and component tests plus manual mobile and desktop QA.
+The first version would support a short manual entry path before attempting OCR. It would capture the sanctioned amount, amount actually disbursed, EMI, tenure, nominal rate, mandatory charges, insurance, and fixed/floating terms. Borrower Copilot would then:
 
-Lightweight home, gold, and personal-car reference routes remain because the brief requests real market envelopes for those categories. They do not receive the same adaptive depth as the three evaluated borrower paths.
+1. Recalculate APR from the offer's actual cash flows using the existing IRR engine.
+2. Compare the quoted EMI with the borrower's safe total EMI ceiling and stress result.
+3. Compare the quoted nominal rate and APR with the relevant dated market band.
+4. Flag financed fees, an amount above the safe-use limit, or terms that contradict the KFS.
+5. Regenerate the Negotiation Card with a clear accept, negotiate, or walk-away action.
 
-## Next-build priorities
+This closes the largest remaining gap in the borrower's journey: V1 prepares someone before the branch, while Offer Check helps them evaluate what the lender actually puts on the table. It also reuses the strongest existing components instead of adding unrelated product breadth.
 
-1. Add per-output confidence and identify the single unanswered question that would tighten each result most.
-2. Build an offer-level KFS parser and comparator on the existing IRR cash-flow engine.
-3. Extract evidence from bank statements and ITRs, with borrower confirmation before any calculation changes.
-4. Add lender-specific, versioned rate feeds with stale-source warnings.
-5. Validate Kannada and Hindi copy with borrowers and branch staff.
+After validating that flow with borrowers and branch staff, the next investments would be:
+
+- Evidence-assisted input from bank statements and ITRs, always requiring borrower confirmation before a derived value changes the result.
+- Per-output confidence plus one “answer this next” prompt showing which missing fact would most reduce uncertainty.
+- Versioned lender-rate feeds with source-expiry warnings rather than silently stale market data.
+- Kannada and Hindi copy tested with borrowers, not merely translated word for word.
+
+I would not add lender matching, approval probabilities, or generative recommendations until there is evidence that the underlying lender data is reliable enough to support them.
+
+## What I would cut
+
+V1 deliberately cuts features that add operational scope without improving the three required lending decisions:
+
+- Accounts, saved applications, sharing, backend storage, and production AI.
+- Bureau pulls and OCR/import of statements, ITRs, or KFS documents.
+- Lender-specific approval predictions and “best lender” rankings without dependable lender data.
+- A standalone offer-entry flow before the underlying affordability and APR engines were proven.
+- Deep adaptive journeys beyond Priya, Ravi, and Anita. Home, gold, and personal-car support remains lightweight because the brief requests real reference bands and basic routing.
+- Multiple simultaneous stress scenarios. V1 uses one explicit, product-relevant shock that a borrower can understand.
+- Broad Playwright and cross-browser automation. Domain tests protect the financial decisions; focused component tests and manual mobile QA protect the shipped path.
+
+If the time box were reduced further, I would cut marketing-page depth and non-persona product UI before removing any decision rule. I would not cut the lender-versus-safe split, hard stops, unknown-as-unknown behavior, calculation explanations, the Negotiation Card, or tests around the three borrower outcomes. Those are the product, not polish.
