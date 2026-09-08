@@ -48,38 +48,17 @@ svg { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-wi
 .site-header nav a { color: #4f5a53; font-size: .82rem; font-weight: 650; text-decoration: none; }
 .header-button { min-height: 2.55rem; padding: .65rem .8rem; color: #fff; background: var(--green); }
 .hero { display: grid; max-width: 88rem; margin: 0 auto; border-bottom: 1px solid var(--line); }
-.hero-copy { display: flex; flex-direction: column; justify-content: center; min-height: 38rem; padding: 4rem 1.25rem; }
-.hero-copy h1 { max-width: 12ch; margin: 1rem 0 1.3rem; font-family: Georgia, "Times New Roman", serif; font-size: clamp(3.25rem, 12vw, 6.75rem); font-weight: 500; letter-spacing: -.07em; line-height: .91; }
+.hero-copy { display: flex; min-height: 38rem; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1.25rem; text-align: center; }
+.hero-copy h1 { max-width: 14ch; margin: 1rem 0 1.3rem; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.75rem, 7vw, 5.5rem); font-weight: 500; letter-spacing: -.065em; line-height: .94; }
 .hero-lede { max-width: 41rem; margin: 0; color: #525e56; font-size: 1.05rem; line-height: 1.65; }
-.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.25rem; margin-top: 2.2rem; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1rem 1.25rem; margin-top: 2.2rem; }
 .time-note { color: #727a74; font-size: .75rem; }
 .trust-row { display: flex; align-items: center; gap: .55rem; margin-top: 1.6rem; color: #607067; font-size: .75rem; }
 .trust-row svg { color: var(--green-2); }
-.hero-visual { align-self: center; margin: 0 1.25rem 4rem; padding: 1.15rem; border: 1px solid #cfc8bc; border-radius: .45rem; background: #fffdf8; box-shadow: var(--shadow); transform: rotate(.5deg); }
-.visual-topline { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid var(--line); color: #718077; font-size: .57rem; font-weight: 800; letter-spacing: .11em; }
 .confidence-pill { display: inline-flex; align-items: center; gap: .38rem; width: fit-content; padding: .4rem .6rem; border: 1px solid #cad5cd; border-radius: 99px; color: #3f5549; background: #f4f8f3; font-size: .62rem; font-weight: 750; letter-spacing: 0; text-transform: none; }
 .confidence-pill i { width: .42rem; height: .42rem; border-radius: 50%; background: #5f9e73; }
 .confidence-pill.medium i { background: var(--amber); }
 .confidence-pill.low i { background: var(--rust); }
-.range-graphic { padding: 1.45rem 0 1.65rem; }
-.range-label { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: .45rem; font-size: .68rem; }
-.range-label strong { font-family: Georgia, serif; font-size: 1.15rem; font-weight: 500; }
-.range-track { height: .65rem; margin-bottom: 1.35rem; border-radius: 99px; background: #e5e2dc; overflow: hidden; }
-.range-track span { display: block; height: 100%; border-radius: inherit; }
-.lender-track span { background: #a8b6ad; }
-.safe-track span { background: var(--green-2); }
-.sample-verdict { display: grid; grid-template-columns: auto 1fr; gap: .8rem; padding: 1.1rem; border-radius: .3rem; color: #f7f4ec; background: var(--green); }
-.verdict-icon { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; color: var(--green); background: var(--lime); font-weight: 900; }
-.sample-verdict small { display: block; margin-bottom: .25rem; color: #a9c0b2; font-size: .53rem; font-weight: 800; letter-spacing: .12em; }
-.sample-verdict strong { display: block; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 500; }
-.sample-verdict p { margin: .25rem 0 0; color: #cbd9d0; font-size: .7rem; line-height: 1.45; }
-.sample-metrics { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 1.2rem; border: solid var(--line); border-width: 1px 0; }
-.sample-metrics > div { padding: .8rem .45rem; }
-.sample-metrics > div + div { border-left: 1px solid var(--line); }
-.sample-metrics span { display: block; margin-bottom: .35rem; color: #7e867f; font-size: .48rem; font-weight: 800; letter-spacing: .07em; }
-.sample-metrics strong { font-family: Georgia, serif; font-size: .85rem; font-weight: 600; }
-.sample-metrics .tight-text { color: var(--amber); font-family: inherit; font-size: .7rem; text-transform: uppercase; }
-.sample-footnote { margin: .7rem 0 0; color: #959a96; font-size: .55rem; text-align: center; }
 .principles { display: grid; max-width: 88rem; margin: 0 auto; border-bottom: 1px solid var(--line); }
 .principles > div { position: relative; padding: 2rem 1.25rem; border-bottom: 1px solid var(--line); }
 .principles > div:last-child { border-bottom: 0; }
@@ -325,7 +304,6 @@ svg { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-wi
   .site-header, .assessment-header, .results-header { padding-left: 2rem; padding-right: 2rem; }
   .site-header nav { display: flex; }
   .hero-copy, .examples-section, .principles > div, .site-footer { padding-left: 2rem; padding-right: 2rem; }
-  .hero-visual { margin-left: 2rem; margin-right: 2rem; padding: 1.5rem; }
   .principles { grid-template-columns: repeat(3, 1fr); }
   .principles > div { border-right: 1px solid var(--line); border-bottom: 0; }
   .principles > div:last-child { border-right: 0; }
@@ -350,9 +328,8 @@ svg { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-wi
 }
 
 @media (min-width: 64rem) {
-  .hero { grid-template-columns: 1.15fr .85fr; min-height: calc(100vh - 4.75rem); }
-  .hero-copy { min-height: 43rem; padding: 5rem 4.5rem 5rem 2rem; border-right: 1px solid var(--line); }
-  .hero-visual { width: min(31rem, calc(100% - 5rem)); margin: 2rem auto; }
+  .hero { min-height: calc(100vh - 4.75rem); }
+  .hero-copy { min-height: 43rem; padding: 5rem 2rem; }
   .assessment-layout { grid-template-columns: 17rem 1fr; }
   .step-rail { position: sticky; top: 0; display: flex; height: calc(100vh - 4.5rem); flex-direction: column; }
   .form-panel { padding: 3.5rem 2.5rem 2rem; }

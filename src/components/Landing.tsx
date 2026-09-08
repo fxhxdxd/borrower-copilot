@@ -37,26 +37,6 @@ export function Landing({ personas, onStart, onPersona }: Props) {
           </div>
           <div className="trust-row"><ShieldIcon /><span>Nothing is uploaded, saved, or shared.</span></div>
         </div>
-
-        <div className="hero-visual" aria-label="Example comparison between lender amount and borrower-safe amount">
-          <div className="visual-topline"><span>YOUR BORROWING RANGE</span><span className="confidence-pill"><i /> Medium confidence</span></div>
-          <div className="range-graphic">
-            <div className="range-label lender"><span>A lender may offer</span><strong>₹11.8L–₹14.2L</strong></div>
-            <div className="range-track lender-track"><span style={{ width: "88%" }} /></div>
-            <div className="range-label safe"><span>You should use</span><strong>up to ₹8.4L</strong></div>
-            <div className="range-track safe-track"><span style={{ width: "54%" }} /></div>
-          </div>
-          <div className="sample-verdict">
-            <span className="verdict-icon">✓</span>
-            <div><small>YOUR ANSWER</small><strong>Borrow—with a limit.</strong><p>The request fits. The lender’s maximum is not your target.</p></div>
-          </div>
-          <div className="sample-metrics">
-            <div><span>SAFE NEW EMI</span><strong>₹18,600</strong></div>
-            <div><span>FAIR RATE</span><strong>10.5–13.0%</strong></div>
-            <div><span>STRESS CHECK</span><strong className="tight-text">Tight</strong></div>
-          </div>
-          <p className="sample-footnote">Illustrative output—not a loan offer.</p>
-        </div>
       </section>
 
       <section className="principles" id="how">
@@ -88,4 +68,3 @@ export function Landing({ personas, onStart, onPersona }: Props) {
     </main>
   );
 }
-
