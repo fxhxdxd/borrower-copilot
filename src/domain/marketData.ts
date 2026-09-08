@@ -64,7 +64,6 @@ export const PRODUCT_CONFIG: Record<Exclude<ProductId, "not-sure">, ProductConfi
     },
     feePercent: { min: 1, max: 2.5 },
     tenureMonths: { prudent: 36, max: 48 },
-    maxLtv: 0.9,
     rateType: "fixed",
     asOf: MARKET_AS_OF,
     sources: [source("Axis two-wheeler rates", "https://www.axis.bank.in/loans/two-wheeler-loans/interest-rates")],
@@ -96,7 +95,6 @@ export const PRODUCT_CONFIG: Record<Exclude<ProductId, "not-sure">, ProductConfi
     },
     feePercent: { min: 1, max: 2 },
     tenureMonths: { prudent: 60, max: 60 },
-    maxLtv: 0.9,
     rateType: "fixed",
     asOf: MARKET_AS_OF,
     sources: [
@@ -139,7 +137,6 @@ export const PRODUCT_CONFIG: Record<Exclude<ProductId, "not-sure">, ProductConfi
     },
     feePercent: { min: 0.5, max: 2 },
     tenureMonths: { prudent: 60, max: 84 },
-    maxLtv: 0.9,
     rateType: "fixed",
     asOf: MARKET_AS_OF,
     sources: [
@@ -149,17 +146,19 @@ export const PRODUCT_CONFIG: Record<Exclude<ProductId, "not-sure">, ProductConfi
   },
 };
 
-export function commercialVehicleConfig(condition: "new" | "used" = "new") {
+export function commercialVehicleConfig(condition: "new" | "used" | "unknown" = "unknown") {
   const base = PRODUCT_CONFIG["commercial-vehicle"];
   if (condition === "new") return base;
-  return {
+  if (condition === "used") return {
     ...base,
     rateBands: {
       strong: { min: 8.4, max: 11 },
       standard: { min: 10, max: 15 },
       uncertain: { min: 13, max: 22 },
     },
-    maxLtv: 0.8,
+  } satisfies ProductConfig;
+  return {
+    ...base,
+    rateBands: { uncertain: { min: 7.25, max: 22 } },
   } satisfies ProductConfig;
 }
-

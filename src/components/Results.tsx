@@ -57,7 +57,7 @@ export function NegotiationCard({ input, result }: { input: AssessmentInput; res
       <div className="card-block amount-block"><span>1 · AMOUNT</span><AmountComparison result={result} /></div>
       <div className="card-block"><span>2 · EMI + TENURE</span><strong>{formatRupees(result.safeNewEmi.min)}<small> safe new EMI / month</small></strong><p>{result.recommendedTenureLabel}</p></div>
       <div className="card-block"><span>3 · FAIR PRICE</span><strong>{result.rateBand.min.toFixed(2)}–{result.rateBand.max.toFixed(2)}%<small> nominal</small></strong><p>{result.aprBand.min.toFixed(2)}–{result.aprBand.max.toFixed(2)}% indicative APR</p></div>
-      <div className="card-block route-block"><span>4 · PRODUCT ROUTE</span>{result.routes.map((route) => <div key={`${route.product}-${route.amount}`}><strong>{route.label}</strong>{route.amount && <small>{formatCompactRupees(route.amount)}</small>}<p>{route.rationale}</p></div>)}</div>
+      <div className="card-block route-block"><span>4 · PRODUCT ROUTE</span>{result.routes.map((route) => <div key={`${route.product}-${route.amount}`}><strong>{route.label}</strong>{route.amount && <small>{formatCompactRupees(route.amount)}</small>}<p>{route.rationale}</p></div>)}{result.productFeasibilityWarning && <div className="mismatch-note"><strong>Check with the lender</strong><p>{result.productFeasibilityWarning}</p></div>}</div>
     </section>
 
     <section className="card-support-grid">
@@ -135,6 +135,7 @@ export function Results({ input, result, onEdit, onHome }: Props) {
           <div className="result-card-heading"><div><span>04</span><h2>Product route</h2></div><p>{result.routes.length > 1 ? "One shared EMI ceiling across both facilities." : "Matched to use and security."}</p></div>
           <div className="route-list">{result.routes.map((route, index) => <div key={`${route.product}-${route.amount}`}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{route.label}</h3><p>{route.rationale}</p></div>{route.amount && <strong>{formatCompactRupees(route.amount)}</strong>}</div>)}</div>
           {result.productMismatch && <div className="mismatch-note"><strong>Product mismatch</strong><p>{result.productMismatch}</p></div>}
+          {result.productFeasibilityWarning && <div className="mismatch-note"><strong>Check with the lender</strong><p>{result.productFeasibilityWarning}</p></div>}
         </article>
 
         <article className="result-card stress-result-card">

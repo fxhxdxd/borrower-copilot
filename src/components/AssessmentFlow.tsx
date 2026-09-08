@@ -289,13 +289,13 @@ function ModuleFields({
       </div>;
     }
     case "vehicle": {
-      const current = input.vehicle ?? { class: "two-wheeler" as const, use: "personal" as const, condition: "new" as const, price: input.requestedAmount, downPayment: 0 };
+      const current = input.vehicle ?? { class: "two-wheeler" as const, use: "personal" as const, condition: "unknown" as const };
       return <div className="field-grid two">
         <SelectField label="Vehicle class" value={current.class} options={[{ value: "two-wheeler", label: "Two-wheeler" }, { value: "car", label: "Car" }, { value: "three-wheeler-lcv", label: "Three-wheeler / LCV" }]} onChange={(vehicleClass) => update({ vehicle: { ...current, class: vehicleClass } })} />
         <SelectField label="Primary use" value={current.use} options={[{ value: "personal", label: "Personal only" }, { value: "income-generating", label: "Personal, used to earn" }, { value: "business", label: "Business / commercial" }]} onChange={(use) => update({ vehicle: { ...current, use } })} />
-        <SelectField label="Condition" value={current.condition} options={[{ value: "new", label: "New" }, { value: "used", label: "Used" }]} onChange={(condition) => update({ vehicle: { ...current, condition } })} />
-        <NumberField label="Invoice price" prefix="₹" value={current.price || undefined} onChange={(value) => update({ vehicle: { ...current, price: value ?? 0 } })} />
-        <NumberField label="Down payment" prefix="₹" value={current.downPayment || undefined} onChange={(value) => update({ vehicle: { ...current, downPayment: value ?? 0 } })} />
+        <SelectField label="Condition" value={current.condition} options={[{ value: "unknown", label: "Not sure" }, { value: "new", label: "New" }, { value: "used", label: "Used" }]} onChange={(condition) => update({ vehicle: { ...current, condition } })} />
+        <NumberField label="Vehicle price — optional" prefix="₹" value={current.price} onChange={(price) => update({ vehicle: { ...current, price } })} hint="Used only to flag a possible funding gap; it never changes affordability." />
+        <NumberField label="Your contribution — optional" prefix="₹" value={current.downPayment} onChange={(downPayment) => update({ vehicle: { ...current, downPayment } })} hint="Leave blank if the requested loan amount is already net of your contribution." />
       </div>;
     }
     case "property-purchase": {

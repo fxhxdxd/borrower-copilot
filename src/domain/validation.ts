@@ -25,10 +25,17 @@ export function validateAssessment(input: AssessmentInput): AssessmentIssue[] {
   }
 
   if (input.vehicle) {
-    if (input.vehicle.price <= 0) issues.push({ field: "vehicle.price", message: "Add a valid vehicle invoice price." });
-    if (input.vehicle.downPayment < 0 || input.vehicle.downPayment > input.vehicle.price) issues.push({ field: "vehicle.downPayment", message: "Vehicle down payment must be between zero and the invoice price." });
-    const vehicleNeed = input.businessSplit?.vehicle ?? input.requestedAmount;
-    if (vehicleNeed > input.vehicle.price - input.vehicle.downPayment) issues.push({ field: "vehicle.finance", message: "Vehicle finance cannot exceed invoice price minus down payment." });
+    if (input.vehicle.price !== undefined && (!Number.isFinite(input.vehicle.price) || input.vehicle.price <= 0)) {
+      issues.push({ field: "vehicle.price", message: "If supplied, the vehicle price must be greater than zero." });
+    }
+    if (input.vehicle.downPayment !== undefined && (
+      !Number.isFinite(input.vehicle.downPayment) ||
+      input.vehicle.downPayment < 0 ||
+      input.vehicle.price === undefined ||
+      input.vehicle.downPayment > input.vehicle.price
+    )) {
+      issues.push({ field: "vehicle.downPayment", message: "A contribution needs a valid vehicle price and cannot exceed it." });
+    }
   }
 
   if (input.propertyPurchase) {

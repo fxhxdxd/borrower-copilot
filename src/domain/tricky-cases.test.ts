@@ -176,11 +176,25 @@ describe("recognition and unknown-data boundaries", () => {
 });
 
 describe("routing, caps, verdicts, and stress", () => {
-  it("caps vehicle lending by both contribution and LTV", () => {
+  it("keeps vehicle price and contribution outside borrower affordability", () => {
     const highIncome = { ...anita, monthlyIncome: { min: 300_000, max: 300_000 }, essentialExpenses: 20_000, currentDebtPayments: 0, activeDebts: [], recentPaymentIssue: false, delinquency: undefined, emergencySavingsMonths: 6 };
-    const result = assessBorrower(highIncome);
-    expect(result.lenderAmount.max).toBeLessThanOrEqual(150_000);
-    expect(result.safeAmount.max).toBeLessThanOrEqual(150_000);
+    const withoutFundingDetails = assessBorrower(highIncome);
+    const priceOnly = assessBorrower({
+      ...highIncome,
+      vehicle: { ...highIncome.vehicle!, price: 100_000 },
+    });
+    const contribution = assessBorrower({
+      ...highIncome,
+      vehicle: { ...highIncome.vehicle!, price: 200_000, downPayment: 100_000 },
+    });
+    for (const variant of [priceOnly, contribution]) {
+      expect(variant.lenderAmount).toEqual(withoutFundingDetails.lenderAmount);
+      expect(variant.safeAmount).toEqual(withoutFundingDetails.safeAmount);
+      expect(variant.requestedEmi).toEqual(withoutFundingDetails.requestedEmi);
+      expect(variant.verdict).toEqual(withoutFundingDetails.verdict);
+      expect(variant.productFeasibilityWarning).toContain("does not change borrower-safe capacity");
+    }
+    expect(withoutFundingDetails.productFeasibilityWarning).toBeUndefined();
   });
 
   it("uses different new and used commercial-vehicle envelopes", () => {

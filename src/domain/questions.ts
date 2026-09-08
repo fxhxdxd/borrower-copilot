@@ -201,7 +201,7 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
   {
     id: "vehicle",
     title: "Vehicle details",
-    why: "Class, use, condition and contribution select a materially different product and amount cap.",
+    why: "Class, use and condition select the product and price range. Optional price details only flag a funding gap.",
     priority: "routing",
     applies: (input) => Boolean(
       input.purposeUses?.includes("vehicle") ||
@@ -213,9 +213,9 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
     fields: [
       field("vehicle.class", "Vehicle class", "product route", "rate band"),
       field("vehicle.use", "Primary use", "product route", "upside treatment"),
-      field("vehicle.condition", "New or used", "rate band", "LTV cap"),
-      field("vehicle.price", "Invoice price", "amount cap"),
-      field("vehicle.downPayment", "Down payment", "amount cap", "requested finance"),
+      field("vehicle.condition", "New or used", "rate band where sourced"),
+      field("vehicle.price", "Optional vehicle price", "funding-gap warning"),
+      field("vehicle.downPayment", "Optional borrower contribution", "funding-gap warning"),
     ],
   },
   {

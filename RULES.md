@@ -56,7 +56,7 @@ Formula:
 new lender EMI headroom = lender-recognized income × FOIR − current repayments
 ```
 
-The engine reconciles the core repayment answer against itemized debt EMIs and uses the larger total. Product tenure, loan-to-value, purchase price, down payment, and collateral then cap principal. The displayed binding constraint is one of cash flow, borrower-safe EMI, lender-recognized income, asset contribution, collateral, tenure, or unresolved debt distress.
+The engine reconciles the core repayment answer against itemized debt EMIs and uses the larger total. Product tenure and applicable property/gold security constraints then cap principal. Vehicle price and contribution never cap borrower affordability; when optionally supplied, they can only produce a separate funding-gap warning. The displayed binding constraint is one of cash flow, borrower-safe EMI, lender-recognized income, collateral, tenure, or unresolved debt distress.
 
 ### `TENURE-01` Modeled age-at-loan-end guardrail — our judgment
 
@@ -118,7 +118,7 @@ V1 marks debt at 24%+ as high cost. A revolving card balance with 75%+ utilizati
 
 ### `ROUTE-01` Match purpose and security before pricing — market data plus our judgment
 
-Routing uses the structured “money will be used for” selections and confirmed adaptive answers. The free-text purpose note is explanation only: keywords in it never activate a module or select a product. For a mixed business need, the business split is asked first; a positive vehicle component then reveals vehicle class, use, condition, price, and contribution.
+Routing uses the structured “money will be used for” selections and confirmed adaptive answers. The free-text purpose note is explanation only: keywords in it never activate a module or select a product. For a mixed business need, the business split is asked first; a positive vehicle component then reveals vehicle class, use, and condition. Vehicle price and contribution are optional funding-gap context, not affordability inputs.
 
 - Wedding/general consumption → personal loan.
 - Home purchase → home loan, capped by purchase price, down payment, and reference LTV.
@@ -151,7 +151,7 @@ Ranges overlap deliberately. A known score/profile can narrow a band. An unknown
 | Gold, lightweight V1 support | 9.15–17% full envelope | — | — |
 | Personal car | 8.7–9.35% | 9.15–11.7% | 8.7–15.6% full new/used envelope |
 
-Reference LTV caps used in V1: home 80%, LAP 60%, gold 75%, new vehicle 90%, used commercial vehicle 80%. These are model caps, not promises of lender eligibility.
+Reference LTV caps used in V1 are limited to home 80%, LAP 60%, and gold 75%. They are model caps, not promises of lender eligibility. V1 does not impose a generic vehicle LTV: actual vehicle-finance margins are lender-specific and belong in the lender's current terms.
 
 ### Primary rate sources
 
@@ -215,7 +215,7 @@ The ten core questions can always produce the four required outputs, although mi
 | Card or BNPL behavior | First confirms current use; hidden for no-history borrowers unless a card/BNPL debt is explicitly declared | distress hard stop and cleanup action |
 | Delinquency detail | Distinguishes resolved from recent live arrears | hard stop and verdict |
 | Collateral | Tests security, consent, availability and value | product route and LTV cap |
-| Vehicle | Revealed only by a structured vehicle use, vehicle product, or positive business-split vehicle amount; class/use/condition/price/contribution pick product and cap | route, rate band, amount |
+| Vehicle | Revealed only by a structured vehicle use, vehicle product, or positive business-split vehicle amount; class/use/condition select product and price range, while optional price/contribution only check the stated funding gap | route, rate band, requested EMI, separate feasibility warning |
 | Home purchase | Price and contribution cap finance | lender amount |
 | Business split | Prevents vehicle and stock from sharing the wrong product | component routes and blended EMI |
 | Income uplift | Preserves productive upside outside the base | evidence-adjusted upside range only |
@@ -230,7 +230,8 @@ Question visibility has separate regression tests: narrative keywords cannot tri
 - Unknown savings: use the full adjusted safe-ratio interval.
 - Unknown/no-history credit: use the full product price envelope.
 - Missing debt detail: retain the declared total and list the evidence gap.
-- Missing vehicle/property values: do not invent an asset cap.
+- Missing vehicle class/use: retain an unresolved vehicle route and widen confidence; price/contribution may remain blank without reducing confidence or affordability.
+- Missing property values for an asset-backed property route: do not invent an asset cap.
 - One to three evidence gaps → medium confidence; four or more → low; none → high.
 
 Confidence describes the precision of this assessment, not the borrower's character or creditworthiness.

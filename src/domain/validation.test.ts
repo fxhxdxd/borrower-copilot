@@ -53,12 +53,13 @@ describe("assessment validation", () => {
     expect(issues).toContainEqual(expect.objectContaining({ field: "businessSplit", message: expect.stringContaining("negative") }));
   });
 
-  it("rejects vehicle finance above invoice less contribution", () => {
+  it("does not turn optional vehicle funding details into an affordability error", () => {
     const issues = validateAssessment({
       ...WALKTHROUGH_INPUTS.anita,
       requestedAmount: 160_000,
+      vehicle: { ...WALKTHROUGH_INPUTS.anita.vehicle!, price: 120_000, downPayment: 20_000 },
     });
-    expect(issues).toContainEqual(expect.objectContaining({ field: "vehicle.finance" }));
+    expect(issues).not.toContainEqual(expect.objectContaining({ field: "vehicle.finance" }));
   });
 
   it("rejects a vehicle down payment above its invoice price", () => {

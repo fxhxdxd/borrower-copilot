@@ -30,9 +30,9 @@ export type CreditStatus =
 export type VehicleDetails = {
   class: "two-wheeler" | "car" | "three-wheeler-lcv";
   use: "personal" | "income-generating" | "business";
-  condition: "new" | "used";
-  price: number;
-  downPayment: number;
+  condition: "new" | "used" | "unknown";
+  price?: number;
+  downPayment?: number;
 };
 
 export type ActiveDebt = {
@@ -147,6 +147,7 @@ export type AssessmentResult = {
   aprBand: Interval;
   routes: ProductRoute[];
   productMismatch?: string;
+  productFeasibilityWarning?: string;
   bindingConstraint: string;
   stress: StressResult;
   confidence: "high" | "medium" | "low";

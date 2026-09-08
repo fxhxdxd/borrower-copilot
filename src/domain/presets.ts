@@ -85,7 +85,7 @@ export const PERSONAS: PersonaPreset[] = [
       },
     },
     knownFacts: ["₹40k–₹80k cash income", "₹4.2L ITR", "₹45L unencumbered shop", "No credit history", "₹15L request"],
-    assumptionLabels: ["₹25,000 essentials", "₹5L vehicle + ₹10L stock split", "New ₹6L LCV with ₹1L down payment", "Two months of emergency savings", "No recent payment issue"],
+    assumptionLabels: ["₹25,000 essentials", "₹5L vehicle + ₹10L stock split", "New commercial vehicle", "Two months of emergency savings", "No recent payment issue"],
     walkthrough: {
       name: "Ravi",
       city: "Mysuru",
@@ -120,8 +120,6 @@ export const PERSONAS: PersonaPreset[] = [
         class: "three-wheeler-lcv",
         use: "business",
         condition: "new",
-        price: 600_000,
-        downPayment: 100_000,
       },
       businessSplit: { workingCapital: 1_000_000, equipment: 0, vehicle: 500_000 },
       expectedNetIncomeUplift: 15_000,
@@ -176,9 +174,7 @@ export const PERSONAS: PersonaPreset[] = [
       vehicle: {
         class: "two-wheeler",
         use: "income-generating",
-        condition: "new",
-        price: 170_000,
-        downPayment: 20_000,
+        condition: "unknown",
       },
       expectedNetIncomeUplift: 8_000,
       upliftEvidence: "weak",

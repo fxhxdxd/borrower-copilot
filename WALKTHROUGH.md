@@ -42,7 +42,7 @@ Show:
 - ITR income and net profit are distinct from turnover.
 - His wife's ₹18,000 is household context, not repayment income until a documented and willing co-applicant is confirmed.
 - The ₹15L need is split into ₹5L vehicle and ₹10L stock.
-- New versus used commercial vehicle selects a different rate/LTV envelope.
+- New versus used commercial vehicle selects a different sourced rate envelope. Price and contribution remain optional and never change borrower affordability.
 - The card/BNPL module is absent because Ravi reports no formal credit history and confirms zero current debt.
 
 Open the result.

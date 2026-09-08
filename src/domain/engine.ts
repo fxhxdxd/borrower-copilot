@@ -58,7 +58,7 @@ export function creditTier(input: AssessmentInput): RateTier | "unknown" {
 function configFor(product: ProductId, input: AssessmentInput): ProductConfig {
   if (product === "not-sure") return PRODUCT_CONFIG.personal;
   if (product === "commercial-vehicle") {
-    return commercialVehicleConfig(input.vehicle?.condition ?? "new");
+    return commercialVehicleConfig(input.vehicle?.condition ?? "unknown");
   }
   return PRODUCT_CONFIG[product];
 }
@@ -152,7 +152,11 @@ export function routeProducts(input: AssessmentInput): ProductRoute[] {
     }
     return [{
       product: "commercial-vehicle",
-      label: `${input.vehicle.condition === "used" ? "Used" : "New"} commercial-vehicle finance`,
+      label: input.vehicle.condition === "used"
+        ? "Used commercial-vehicle finance"
+        : input.vehicle.condition === "new"
+          ? "New commercial-vehicle finance"
+          : "Commercial-vehicle finance",
       amount: input.requestedAmount,
       rationale: "A three-wheeler or LCV used for business is financed against the vehicle.",
     }];
@@ -293,9 +297,6 @@ function capByAsset(amount: number, input: AssessmentInput, routes: ProductRoute
   if (routes.length === 1) {
     const product = routes[0].product;
     const config = configFor(product, input);
-    if ((product === "two-wheeler" || product === "car" || product === "commercial-vehicle") && input.vehicle) {
-      cap = Math.min(input.vehicle.price - input.vehicle.downPayment, input.vehicle.price * (config.maxLtv ?? 1));
-    }
     if (product === "home" && input.propertyPurchase) {
       cap = Math.min(
         input.propertyPurchase.price - input.propertyPurchase.downPayment,
@@ -395,8 +396,20 @@ function missingEvidence(input: AssessmentInput, routes: ProductRoute[]) {
   if (input.incomeType === "informal" && !input.bankVisibleMonthlyIncome) missing.push("bank-visible income");
   if (input.recentPaymentIssue && !input.delinquency) missing.push("payment-issue status");
   if (routes.some((route) => route.product === "lap") && !input.collateral) missing.push("property ownership and encumbrance");
-  if ((input.purposeUses.includes("vehicle") || routes.some((route) => ["two-wheeler", "car", "commercial-vehicle"].includes(route.product))) && !input.vehicle) missing.push("vehicle class, price and use");
+  if ((input.purposeUses.includes("vehicle") || routes.some((route) => ["two-wheeler", "car", "commercial-vehicle"].includes(route.product))) && !input.vehicle) missing.push("vehicle class and use");
   return missing;
+}
+
+function vehicleFeasibilityWarning(input: AssessmentInput, routes: ProductRoute[]) {
+  if (!input.vehicle?.price) return undefined;
+  const vehicleRoute = routes.find((route) => ["two-wheeler", "car", "commercial-vehicle"].includes(route.product));
+  if (!vehicleRoute) return undefined;
+  const vehicleLoanAmount = vehicleRoute.amount ?? input.requestedAmount;
+  const contribution = input.vehicle.downPayment ?? 0;
+  const amountAfterContribution = Math.max(0, input.vehicle.price - contribution);
+  if (vehicleLoanAmount <= amountAfterContribution) return undefined;
+  const excess = vehicleLoanAmount - amountAfterContribution;
+  return `The ₹${vehicleLoanAmount.toLocaleString("en-IN")} vehicle-loan portion is ₹${excess.toLocaleString("en-IN")} above the stated price after contribution. This does not change borrower-safe capacity; confirm the funding requirement and lender terms.`;
 }
 
 function confidenceFor(missing: string[]) {
@@ -526,11 +539,11 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     !routes.some((route) => route.product === input.consideredProduct)
     ? `${productLabel(input.consideredProduct)} does not match the recommended ${routes.map((route) => route.label).join(" + ")} route.`
     : undefined;
+  const feasibilityWarning = vehicleFeasibilityWarning(input, routes);
   const bindingConstraint = hardStop
     ? noAvailableTenure ? "age and available product tenure"
       : recentUnresolved && highCostCount >= 2 ? "unresolved payment issue and stacked high-cost debt" : "monthly cash flow"
-    : routes.length === 1 && input.vehicle && safeAmount.min >= input.vehicle.price - input.vehicle.downPayment ? "asset price and down payment"
-      : safeEmi.min < lenderEmi.min ? "borrower-safe EMI ceiling" : "lender-recognized income";
+    : safeEmi.min < lenderEmi.min ? "borrower-safe EMI ceiling" : "lender-recognized income";
 
   const reasons: Reason[] = [
     {
@@ -579,6 +592,7 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
     aprBand,
     routes,
     productMismatch: mismatch,
+    productFeasibilityWarning: feasibilityWarning,
     bindingConstraint,
     stress,
     confidence: confidenceFor(missing),

@@ -72,13 +72,12 @@ The card asks for the KFS/APR, all mandatory charges with GST separately, and fi
 - No recent payment issue and no current debt repayment.
 - Two months of emergency savings.
 - Illustrative need split: ₹10,00,000 stock and ₹5,00,000 new commercial vehicle.
-- Illustrative new vehicle invoice: ₹6,00,000 with ₹1,00,000 down payment.
 - Ravi is willing to pledge the shop only for the stock portion.
 - Expected ₹15,000 monthly business uplift has weak evidence and is upside only.
 
 ### Questions shown
 
-The first step visibly marks both “Stock / working capital” and “Vehicle”; the narrative text is not used for routing. In addition to the core set, Ravi sees the business split first, followed by vehicle details and collateral, then business vintage, turnover versus net profit, documented income, co-applicant, savings, household context, and upside evidence. Because “No formal credit history” and zero current debt are confirmed, no credit-card/BNPL module appears.
+The first step visibly marks both “Stock / working capital” and “Vehicle”; the narrative text is not used for routing. In addition to the core set, Ravi sees the business split first, followed by vehicle details and collateral, then business vintage, turnover versus net profit, documented income, co-applicant, savings, household context, and upside evidence. Vehicle price and contribution stay blank because the ₹5L split is already the requested vehicle-loan amount; those optional fields cannot change affordability. Because “No formal credit history” and zero current debt are confirmed, no credit-card/BNPL module appears.
 
 ### Tested output
 
@@ -133,12 +132,11 @@ The expected uplift appears separately as an evidence-adjusted ₹0–₹7,500/m
 - No emergency savings.
 - Bounced ₹2,500 remains unresolved.
 - All three app loans remain active and high-cost.
-- New scooter invoice: ₹1,70,000 with ₹20,000 down payment.
 - Expected ₹8,000 monthly uplift has weak evidence and is upside only.
 
 ### Questions shown
 
-The first step visibly marks “Vehicle,” which earns the vehicle-detail module without parsing her narrative. The hard-stop order brings debt schedule, the card/BNPL gate, and delinquency status ahead of vehicle routing. Informal continuity, low month, household context, savings, co-applicant, and uplift evidence follow.
+The first step visibly marks “Vehicle,” which earns the vehicle-detail module without parsing her narrative. Her ₹1.5L request is the loan amount used for affordability; no scooter cost is invented. The hard-stop order brings debt schedule, the card/BNPL gate, and delinquency status ahead of vehicle routing. Informal continuity, low month, household context, savings, co-applicant, and uplift evidence follow.
 
 ### Tested output
 

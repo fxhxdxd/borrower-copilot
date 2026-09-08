@@ -79,5 +79,12 @@ describe("routing and income recognition", () => {
     });
     expect(used.max).toBeGreaterThan(fresh.max);
   });
-});
 
+  it("uses the combined commercial-vehicle envelope when condition is unknown", () => {
+    const unknown = rateBandFor("commercial-vehicle", {
+      ...WALKTHROUGH_INPUTS.ravi,
+      vehicle: { ...WALKTHROUGH_INPUTS.ravi.vehicle!, condition: "unknown" },
+    });
+    expect(unknown).toEqual({ min: 7.25, max: 22 });
+  });
+});
