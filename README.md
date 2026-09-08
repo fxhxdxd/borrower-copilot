@@ -25,7 +25,7 @@ npm run lint
 npm run build
 ```
 
-The test suite covers loan math, RBI's APR example, interval monotonicity, hard stops, routing, all 18 adaptive-module contracts, all three golden borrowers, and three React UI smoke paths.
+The test suite covers loan math, RBI's APR example, interval monotonicity, hard stops, routing, all 18 adaptive-module contracts, all three golden borrowers, and focused React UI smoke paths.
 
 ## Five-minute review path
 
@@ -48,7 +48,7 @@ The test suite covers loan math, RBI's APR example, interval monotonicity, hard 
 
 - [`RULES.md`](RULES.md) — rules, source scope, judgment labels, unknown behavior, question contracts, and limitations.
 - [`RUNTHROUGHS.md`](RUNTHROUGHS.md) — exact inputs, labeled assumptions, outputs, and card summaries for Priya, Ravi, and Anita.
-- [`WALKTHROUGH.md`](WALKTHROUGH.md) — five-minute demonstration narrative, deliberate deferrals, and next-build priorities.
+- [`WALKTHROUGH.md`](WALKTHROUGH.md) — self-guided five-minute reviewer path, deliberate scope cuts, and next-build priorities.
 
 ## Important
 

@@ -1,85 +1,141 @@
-# Five-minute walkthrough
+# Five-minute product walkthrough
 
-## 0:00–0:40 — Frame the product
+## Before starting
 
-Open the landing page.
+Run the application with:
 
-“Borrower Copilot answers four questions before a borrower enters a branch: should I borrow, how much might a lender offer versus how much should I use, what rate/APR is fair, and what EMI survives one clear stress. This is deterministic decision support; it is not a sanction.”
+```bash
+npm install
+npm run dev
+```
 
-Point to the sample amount bars. The product never collapses approval and safety into one number.
+Open the local URL shown in the terminal. No login, backend, database, bureau connection, or API key is required. The three borrower presets contain only facts supplied in the challenge brief; any additional walkthrough inputs are identified in the interface as assumptions.
 
-## 0:40–1:40 — Show the questionnaire architecture
+## 0:00–0:40 — Understand the decision being made
 
-Choose **Priya**.
+On the landing page, review the four questions Borrower Copilot answers:
 
-“The ten core questions always produce an answer. Question one uses visible purpose selections for routing, while the short note is explanation only. Exact values and honest ranges are both first-class. Zero debt requires an explicit confirmation. Credit accepts an exact score, band, no history, or unknown.”
+1. Should this borrower take the loan now?
+2. How much might a lender offer?
+3. How much should the borrower actually use?
+4. What rate, EMI, and stress result should the borrower take into a branch?
 
-Move to “Sharpen the answer.”
+Verify that lender capacity and borrower-safe capacity are presented as separate concepts. Approval size is never treated as the borrowing target, and the product is described as deterministic decision support rather than a sanction or rate guarantee.
 
-“Only relevant follow-ups appear. They are ordered by hard-stop detection, routing, range reduction, then burden. Skipping is allowed: silence widens ranges and reduces confidence instead of becoming zero.”
+## 0:40–1:40 — Complete Priya's assessment
 
-Mention that each adaptive field declares its downstream outputs and each of the 18 modules has a counterfactual test.
+Select **Priya** and review the prefilled core answers. Continue through the questionnaire and verify:
 
-## 1:40–2:35 — Priya: approval is not a target
+- Purpose is selected through structured options; free text only adds context and cannot secretly control routing.
+- Income can be entered as an exact value or an honest range.
+- Reporting zero current debt requires explicit confirmation.
+- Credit status accepts an exact score, an approximate band, no formal history, or unknown.
+- The core questions are sufficient to produce a result, while optional follow-ups tighten its ranges.
+- Skipping a follow-up does not turn an unknown into zero. It widens the result and lowers confidence where relevant.
 
-Open Priya's result.
+On the adaptive step, only follow-ups relevant to Priya's answers should appear. Vehicle, business, collateral, and delinquency-detail questions should remain hidden unless a prior answer makes them relevant.
 
-- Verdict: Borrow.
-- Lender range: ₹18.22L–₹21.89L.
-- Safe capacity: ₹9.21L; “use” remains her ₹8L request.
-- Safe new EMI: ₹24,500.
-- Stress: tight under a 20% three-month income fall.
+## 1:40–2:25 — Verify Priya's result and card
 
-Open “See the calculation.” Read the one-sentence trace and rule ID. Then open the Negotiation Card and show its five headline blocks, three lender questions, and personalized quote sentence.
+Complete the assessment and compare the result with these expected outputs:
 
-## 2:35–3:45 — Ravi: route components, share the ceiling
+| Output | Expected result |
+|---|---:|
+| Verdict | Borrow |
+| A lender may offer | ₹18.22L–₹21.89L |
+| Borrower-safe capacity | ₹9.21L |
+| Amount to use | ₹8L requested amount |
+| Safe new EMI | ₹24,500/month |
+| Primary stress result | Tight under a 20% three-month income fall |
 
-Return home and choose **Ravi**. Continue to the adaptive step.
+Expand the calculation details. Each important number should include a plain-language calculation sentence and rule IDs, including the safe-EMI explanation based on income, current EMI, and borrower-safety limits.
 
-Show:
+Open the Negotiation Card and verify that it fits on one practical branch-facing screen. Its hierarchy should make the verdict, lender-versus-safe amount, EMI and tenure, fair rate/APR, and product route visible before supporting detail. It should also include three lender questions covering the KFS/APR, mandatory charges, and fixed/floating or prepayment terms.
 
-- “Stock / working capital” and “Vehicle” are visibly selected before follow-ups; no free-text keyword or preset identity controls routing.
-- ITR income and net profit are distinct from turnover.
-- His wife's ₹18,000 is household context, not repayment income until a documented and willing co-applicant is confirmed.
-- The ₹15L need is split into ₹5L vehicle and ₹10L stock.
-- New versus used commercial vehicle selects a different sourced rate envelope. Price and contribution remain optional and never change borrower affordability.
-- The card/BNPL module is absent because Ravi reports no formal credit history and confirms zero current debt.
+## 2:25–3:30 — Verify Ravi's split-purpose routing
 
-Open the result.
+Return to the landing page and select **Ravi**.
 
-“The vehicle routes to commercial-vehicle finance and secures itself. The shop is considered only for stock finance/LAP. Both facilities consume one ₹11,000 conservative EMI ceiling; capacities are not added. The full request fails the floating-rate shock, so the verdict is Borrow less.”
+Before the adaptive questions appear, verify that his structured purpose selection already identifies both **stock / working capital** and **vehicle** needs. The app must not infer a vehicle from Ravi's name, preset identity, or free-text keywords.
 
-## 3:45–4:30 — Anita: productive purpose does not override distress
+On the adaptive step, verify:
 
-Choose **Anita** and reach the result.
+- ITR or bank-visible income is kept separate from turnover and self-reported cash flow.
+- Ravi's wife's income is household context until her willingness, documentation, and obligations make it eligible as co-applicant income.
+- The ₹15L request is split into ₹5L for the vehicle and ₹10L for stock.
+- The vehicle class, use, and new/used condition select the appropriate product and market-rate band.
+- Vehicle price and borrower contribution are optional context; they do not change Ravi's income-based safe EMI ceiling.
+- Credit-card questions do not appear merely because Ravi has no credit score. With no formal credit history and confirmed zero current debt, the card/BNPL module stays hidden.
 
-“The scooter is correctly routed to retail two-wheeler finance even though it supports gig work. But a productive purpose does not erase cash flow: essentials plus existing app-loan EMIs consume conservative income, and an unresolved bounce coexists with three high-cost debts. The result is Don't borrow yet, with concrete debt-cure steps.”
+Complete the assessment and verify the result:
 
-Point to the separate upside panel. Future income is visible but excluded from both base capacities.
+| Output | Expected result |
+|---|---:|
+| Verdict | Borrow less |
+| A lender may offer | ₹8.18L–₹29.72L |
+| Borrower-safe capacity | ₹5.90L–₹11.81L |
+| Amount to use | ₹5.90L conservative edge |
+| Shared safe new EMI | ₹11,000–₹22,000/month |
+| Primary stress result | Fail |
 
-## 4:30–5:00 — Rule change and limitations
+The product recommendation should finance the ₹5L delivery-vehicle portion through commercial-vehicle finance and consider LAP or secured business funding for the ₹10L stock portion. Both facilities must consume the same total EMI ceiling; their separate capacities must never be added as if the debts were independent. The explanation should also state that using the vehicle as security may avoid pledging the shop for that portion.
 
-Open `src/domain/marketData.ts`, `src/domain/rules.ts`, and `src/domain/engine.ts`.
+## 3:30–4:15 — Verify Anita's hard stop
 
-“Policy constants, sources, question contracts, and math are outside React. A live change to a safe ratio, stress shock, rate band, or hard-stop threshold changes one pure layer and its tests—not presentation code.”
+Return to the landing page, select **Anita**, and complete the assessment.
 
-Close with limitations: no lender-specific approval model, bureau pull, statement parsing, or rate guarantee; the KFS remains authoritative.
+Verify that the income-generating scooter routes to retail two-wheeler finance while her income remains on the informal/gig assessment path. Expected future earnings from the scooter may appear only as an upside scenario; they must not increase base lender or safe affordability.
 
-## Deliberately deferred from V1
+Compare the result with these expected outputs:
+
+| Output | Expected result |
+|---|---:|
+| Verdict | Don't borrow yet |
+| A lender may offer | ₹0–₹1.41L |
+| Borrower-safe capacity | ₹0 |
+| Amount to use | ₹0 |
+| Primary stress result | Fail |
+
+The hard stop should be explained by current cash flow and repayment distress: essential expenses plus existing repayments consume conservative income, while an unresolved recent bounce coexists with multiple high-cost active debts. The result must include concrete next steps to cure the overdue payment and reduce app-loan pressure rather than offering only a warning.
+
+## 4:15–5:00 — Inspect explainability and implementation boundaries
+
+Review the following implementation files:
+
+- `src/domain/marketData.ts` contains versioned local market-rate data and source metadata.
+- `src/domain/rules.ts` contains lending and borrower-safety policy constants.
+- `src/domain/engine.ts` performs the assessment without React dependencies.
+- The rule and question registries connect inputs to outputs, explanations, unknown behavior, and source or judgment labels.
+
+Run:
+
+```bash
+npm test
+npm run build
+```
+
+The focused suite covers financial math, interval behavior, routing, hard stops, stress, confidence, monotonicity, adaptive-field contracts, the three golden borrower outcomes, and React smoke paths. A safe-ratio, stress, hard-stop, or rate-band change belongs in the pure domain layer and its tests rather than in presentation components.
+
+Finish by reviewing the limitations shown in the product and documentation. Borrower Copilot does not predict lender approval, pull a bureau report, parse financial documents, or guarantee a live rate. A lender's current Key Facts Statement remains authoritative.
+
+## Cut from the V1 scope
+
+The following features were deliberately excluded so V1 could prioritize lending judgment, explainability, and a reliable end-to-end flow:
 
 - Standalone lender-offer entry and KFS comparison.
-- OCR/import of statements, ITRs, bureau reports, or KFS documents.
-- Saved accounts, history, sharing, backend, database, or production AI.
-- Lender-specific eligibility/sanction probability.
-- Deep adaptive paths for home, gold, car, and borrowers beyond the three supplied cases.
-- Separate confidence labels for amount, price, route, and verdict.
-- Multi-shock scenario simulation and localized-language copy.
-- Broad cross-browser/Playwright automation; V1 uses domain tests, three React smoke tests, and manual 360px/desktop QA.
+- OCR or import of statements, ITRs, bureau reports, and KFS documents.
+- Saved accounts, history, sharing, backend storage, and production AI.
+- Lender-specific eligibility or sanction-probability models.
+- Deep adaptive paths for home, gold, personal-car, and borrowers beyond the supplied cases.
+- Multi-shock simulation and localized-language copy.
+- Broad Playwright and cross-browser automation; V1 uses focused domain and component tests plus manual mobile and desktop QA.
+
+Lightweight home, gold, and personal-car reference routes remain because the brief requests real market envelopes for those categories. They do not receive the same adaptive depth as the three evaluated borrower paths.
 
 ## Next-build priorities
 
-1. Per-output confidence and a concise “which answer would tighten this most?” prompt.
-2. Offer-level KFS parser/comparator built on the existing IRR cash-flow engine.
-3. Bank-statement and ITR evidence extraction with borrower confirmation before calculations change.
-4. Lender-specific rate/version feeds and automated stale-source warnings.
-5. Kannada and Hindi copy reviewed with borrowers and branch staff.
+1. Add per-output confidence and identify the single unanswered question that would tighten each result most.
+2. Build an offer-level KFS parser and comparator on the existing IRR cash-flow engine.
+3. Extract evidence from bank statements and ITRs, with borrower confirmation before any calculation changes.
+4. Add lender-specific, versioned rate feeds with stale-source warnings.
+5. Validate Kannada and Hindi copy with borrowers and branch staff.
