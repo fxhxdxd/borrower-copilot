@@ -335,7 +335,7 @@ svg { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-wi
   .field-grid.two, .choice-cards.four { grid-template-columns: repeat(2, 1fr); }
   .field-grid.three { grid-template-columns: repeat(3, 1fr); }
   .yesno-grid { grid-template-columns: repeat(2, 1fr); }
-  .debt-row { grid-template-columns: 1.2fr repeat(4, 1fr); align-items: end; }
+  .debt-row { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
   .results-grid { grid-template-columns: repeat(2, 1fr); }
   .comparison-card, .route-card, .stress-result-card { grid-column: 1 / -1; }
   .confidence-section, .card-cta, .verdict-hero { grid-template-columns: 1.5fr 1fr; align-items: end; padding: 2.2rem; }
@@ -359,6 +359,7 @@ svg { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-wi
   .mobile-progress { display: none; }
   .quiet-label { display: inline; }
   .choice-cards.four { grid-template-columns: repeat(4, 1fr); }
+  .debt-row { grid-template-columns: 1.1fr 1.2fr repeat(4, minmax(0, 1fr)); }
   .answer-view, .card-view { padding: 1.5rem 2rem 5rem; }
   .verdict-hero { padding: 3rem; }
   .results-grid { grid-template-columns: repeat(12, 1fr); }

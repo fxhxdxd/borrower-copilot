@@ -11,6 +11,7 @@ describe("assessment validation", () => {
     const issues = validateAssessment({
       ...WALKTHROUGH_INPUTS.priya,
       purpose: "",
+      purposeUses: [],
       requestedAmount: -1,
       age: 17,
       monthlyIncome: { min: 0, max: -1 },
@@ -20,6 +21,7 @@ describe("assessment validation", () => {
     });
     expect(issues.map((issue) => issue.field)).toEqual(expect.arrayContaining([
       "purpose",
+      "purposeUses",
       "requestedAmount",
       "age",
       "monthlyIncome.min",
@@ -86,5 +88,25 @@ describe("assessment validation", () => {
     });
     expect(issues.map((issue) => issue.field)).toEqual(expect.arrayContaining(["upcomingExpense.monthsUntilDue", "activeDebts"]));
   });
-});
 
+  it("rejects stale card details after the borrower confirms no card or BNPL", () => {
+    const issues = validateAssessment({
+      ...WALKTHROUGH_INPUTS.priya,
+      hasCreditCardOrBnpl: false,
+      cardUtilisationPercent: 80,
+      cardPaidInFull: false,
+    });
+    expect(issues).toContainEqual(expect.objectContaining({ field: "cardBehaviour" }));
+  });
+
+  it("rejects a no-card answer that contradicts the debt schedule", () => {
+    const issues = validateAssessment({
+      ...WALKTHROUGH_INPUTS.ravi,
+      currentDebtPayments: 2_000,
+      debtZeroConfirmed: false,
+      hasCreditCardOrBnpl: false,
+      activeDebts: [{ label: "Card balance", type: "credit-card", balance: 20_000, emi: 2_000 }],
+    });
+    expect(issues).toContainEqual(expect.objectContaining({ field: "cardBehaviour" }));
+  });
+});

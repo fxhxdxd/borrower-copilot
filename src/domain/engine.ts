@@ -102,7 +102,11 @@ function isUsableCollateral(input: AssessmentInput) {
 }
 
 export function routeProducts(input: AssessmentInput): ProductRoute[] {
-  if (input.businessSplit && input.businessSplit.vehicle + input.businessSplit.workingCapital + input.businessSplit.equipment > 0) {
+  const uses = new Set(input.purposeUses);
+  const businessIntent = input.consideredProduct === "business" || uses.has("working-capital") || uses.has("equipment");
+  const vehicleIntent = uses.has("vehicle") || ["two-wheeler", "car", "commercial-vehicle"].includes(input.consideredProduct) || (businessIntent && (input.businessSplit?.vehicle ?? 0) > 0);
+
+  if (businessIntent && input.businessSplit && input.businessSplit.vehicle + input.businessSplit.workingCapital + input.businessSplit.equipment > 0) {
     const routes: ProductRoute[] = [];
     if (input.businessSplit.vehicle > 0) {
       routes.push({
@@ -127,7 +131,7 @@ export function routeProducts(input: AssessmentInput): ProductRoute[] {
     return routes;
   }
 
-  if (input.vehicle) {
+  if (vehicleIntent && input.vehicle) {
     if (input.vehicle.class === "two-wheeler") {
       return [{
         product: "two-wheeler",
@@ -154,24 +158,26 @@ export function routeProducts(input: AssessmentInput): ProductRoute[] {
     }];
   }
 
-  const purpose = input.purpose.toLowerCase();
   let product: ProductId = input.consideredProduct;
   if (product === "not-sure") {
-    if (purpose.includes("home") || purpose.includes("house") || purpose.includes("property purchase")) product = "home";
-    else if (purpose.includes("gold")) product = "gold";
-    else if (purpose.includes("business") || purpose.includes("stock") || purpose.includes("inventory")) {
+    if (uses.has("home-purchase")) product = "home";
+    else if (businessIntent) {
       product = isUsableCollateral(input) && input.collateral?.type === "property"
         ? "lap"
         : isUsableCollateral(input) && input.collateral?.type === "gold"
           ? "gold"
           : "business";
-    } else product = "personal";
+    } else if (isUsableCollateral(input) && input.collateral?.type === "gold") product = "gold";
+    else product = "personal";
   }
+  const unresolvedVehicleRoute = vehicleIntent && !input.vehicle;
   return [{
     product,
-    label: productLabel(product),
+    label: unresolvedVehicleRoute ? "Vehicle finance — details needed" : productLabel(product),
     amount: input.requestedAmount,
-    rationale: `The stated purpose and available security route this need to ${productLabel(product).toLowerCase()}.`,
+    rationale: unresolvedVehicleRoute
+      ? "Vehicle use is confirmed, but class and use are still needed before selecting a retail or commercial vehicle product. The current amount uses a conservative fallback envelope."
+      : `The structured use and available security route this need to ${productLabel(product).toLowerCase()}.`,
   }];
 }
 
@@ -389,7 +395,7 @@ function missingEvidence(input: AssessmentInput, routes: ProductRoute[]) {
   if (input.incomeType === "informal" && !input.bankVisibleMonthlyIncome) missing.push("bank-visible income");
   if (input.recentPaymentIssue && !input.delinquency) missing.push("payment-issue status");
   if (routes.some((route) => route.product === "lap") && !input.collateral) missing.push("property ownership and encumbrance");
-  if (routes.some((route) => ["two-wheeler", "car", "commercial-vehicle"].includes(route.product)) && !input.vehicle) missing.push("vehicle price and use");
+  if ((input.purposeUses.includes("vehicle") || routes.some((route) => ["two-wheeler", "car", "commercial-vehicle"].includes(route.product))) && !input.vehicle) missing.push("vehicle class, price and use");
   return missing;
 }
 
@@ -490,7 +496,8 @@ export function assessBorrower(input: AssessmentInput): AssessmentResult {
   const requestedEmi = emiForRequest(input, routes);
   const noAvailableTenure = routes.some((route) => availableTenureMonths(route.product, input, "max") === 0);
   const unresolved = Boolean(input.delinquency && !input.delinquency.resolved && input.delinquency.unresolvedAmount > 0);
-  const revolvingCardRisk = input.cardUtilisationPercent !== undefined && input.cardUtilisationPercent >= 75 && input.cardPaidInFull === false;
+  const cardUseConfirmed = input.hasCreditCardOrBnpl === true || input.activeDebts?.some((debt) => debt.type === "credit-card" || debt.type === "bnpl");
+  const revolvingCardRisk = Boolean(cardUseConfirmed && input.cardUtilisationPercent !== undefined && input.cardUtilisationPercent >= 75 && input.cardPaidInFull === false);
   const highCostCount = (input.activeDebts?.filter((debt) => debt.balance > 0 && (debt.highCost || (debt.annualRate ?? 0) >= 24)).length ?? 0) + (revolvingCardRisk ? 1 : 0);
   const recentUnresolved = unresolved && (input.delinquency?.monthsAgo ?? 12) <= 3;
   const hardStop = noAvailableTenure || safeEmi.min <= 0 ||

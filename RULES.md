@@ -118,6 +118,8 @@ V1 marks debt at 24%+ as high cost. A revolving card balance with 75%+ utilizati
 
 ### `ROUTE-01` Match purpose and security before pricing — market data plus our judgment
 
+Routing uses the structured “money will be used for” selections and confirmed adaptive answers. The free-text purpose note is explanation only: keywords in it never activate a module or select a product. For a mixed business need, the business split is asked first; a positive vehicle component then reveals vehicle class, use, condition, price, and contribution.
+
 - Wedding/general consumption → personal loan.
 - Home purchase → home loan, capped by purchase price, down payment, and reference LTV.
 - Business stock/equipment with a willing, unencumbered property → secured stock finance / LAP.
@@ -209,16 +211,18 @@ The ten core questions can always produce the four required outputs, although mi
 | Co-applicant | Adds only documented, willing net contribution | lender and safe amount |
 | Emergency savings | Applies explicit 0/2.5/5-point adjustment | safe ratio and amount |
 | Upcoming expense | Reserves cash before the due date | safe EMI and verdict |
-| Debt schedule | Reconciles EMI and finds near payoff/high cost | both capacities, hard stop, next action |
-| Card behavior | Detects revolving high-utilization exposure | distress hard stop and cleanup action |
+| Debt schedule | Reconciles EMI, captures debt type, and finds near payoff/high cost | both capacities, follow-up routing, hard stop, next action |
+| Card or BNPL behavior | First confirms current use; hidden for no-history borrowers unless a card/BNPL debt is explicitly declared | distress hard stop and cleanup action |
 | Delinquency detail | Distinguishes resolved from recent live arrears | hard stop and verdict |
 | Collateral | Tests security, consent, availability and value | product route and LTV cap |
-| Vehicle | Class/use/condition/price/contribution pick product and cap | route, rate band, amount |
+| Vehicle | Revealed only by a structured vehicle use, vehicle product, or positive business-split vehicle amount; class/use/condition/price/contribution pick product and cap | route, rate band, amount |
 | Home purchase | Price and contribution cap finance | lender amount |
 | Business split | Prevents vehicle and stock from sharing the wrong product | component routes and blended EMI |
 | Income uplift | Preserves productive upside outside the base | evidence-adjusted upside range only |
 
 Tests in `src/domain/adaptive-contracts.test.ts` exercise one counterfactual per module. The registry also requires every atomic field to declare its exact output dependencies.
+
+Question visibility has separate regression tests: narrative keywords cannot trigger vehicle routing, a business request with no vehicle component does not ask vehicle details, adding a vehicle component reveals them, and “no formal credit history” does not trigger card questions without a contradictory declared card/BNPL facility.
 
 ## Unknown behavior and confidence
 

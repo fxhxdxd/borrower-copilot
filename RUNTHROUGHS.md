@@ -25,7 +25,7 @@ Generated from the tested fixtures in `src/domain/presets.ts` on 7 September 202
 
 ### Questions shown
 
-The ten core questions are prefilled. Relevant adaptive modules are employment continuity, variable-income/low-month check, household context, co-applicant, emergency savings, upcoming committed expense, active debt schedule, and card behavior. Blank optional answers stay unknown.
+The ten core questions are prefilled, including the visible “Personal expense” use selection. Relevant adaptive modules are employment continuity, variable-income/low-month check, household context, co-applicant, emergency savings, upcoming committed expense, active debt schedule, and a card/BNPL gate. Blank optional answers stay unknown.
 
 ### Tested output
 
@@ -78,7 +78,7 @@ The card asks for the KFS/APR, all mandatory charges with GST separately, and fi
 
 ### Questions shown
 
-In addition to the core set, Ravi sees delinquency/card checks first, collateral, vehicle, and business-split routing next, then business vintage, turnover versus net profit, documented income, co-applicant, savings, household context, and upside evidence.
+The first step visibly marks both “Stock / working capital” and “Vehicle”; the narrative text is not used for routing. In addition to the core set, Ravi sees the business split first, followed by vehicle details and collateral, then business vintage, turnover versus net profit, documented income, co-applicant, savings, household context, and upside evidence. Because “No formal credit history” and zero current debt are confirmed, no credit-card/BNPL module appears.
 
 ### Tested output
 
@@ -138,7 +138,7 @@ The expected uplift appears separately as an evidence-adjusted ₹0–₹7,500/m
 
 ### Questions shown
 
-The hard-stop order brings debt schedule, card behavior, and delinquency status ahead of vehicle routing. Informal continuity, low month, household context, savings, co-applicant, and uplift evidence follow.
+The first step visibly marks “Vehicle,” which earns the vehicle-detail module without parsing her narrative. The hard-stop order brings debt schedule, the card/BNPL gate, and delinquency status ahead of vehicle routing. Informal continuity, low month, household context, savings, co-applicant, and uplift evidence follow.
 
 ### Tested output
 

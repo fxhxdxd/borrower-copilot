@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { activeAdaptiveModules } from "../domain/questions";
-import type { AssessmentInput, CreditStatus, ProductId } from "../domain/types";
+import type { ActiveDebt, AssessmentInput, BorrowingUse, CreditStatus, ProductId } from "../domain/types";
 import type { PersonaPreset } from "../domain/presets";
 import { validateAssessment } from "../domain/validation";
 
@@ -13,6 +13,7 @@ type Props = {
 
 const EMPTY_INPUT: AssessmentInput = {
   purpose: "",
+  purposeUses: [],
   requestedAmount: 0,
   consideredProduct: "not-sure",
   age: 0,
@@ -37,6 +38,28 @@ const productOptions: { value: ProductId; label: string }[] = [
   { value: "car", label: "Car finance" },
   { value: "commercial-vehicle", label: "Commercial-vehicle finance" },
   { value: "business", label: "Business loan" },
+];
+
+const purposeOptions: { value: BorrowingUse; label: string }[] = [
+  { value: "personal-expense", label: "Personal expense" },
+  { value: "debt-consolidation", label: "Consolidate debt" },
+  { value: "working-capital", label: "Stock / working capital" },
+  { value: "equipment", label: "Business equipment" },
+  { value: "vehicle", label: "Vehicle" },
+  { value: "home-purchase", label: "Home purchase" },
+  { value: "other", label: "Other" },
+];
+
+const debtTypeOptions: { value: NonNullable<ActiveDebt["type"]>; label: string }[] = [
+  { value: "personal-loan", label: "Personal loan" },
+  { value: "vehicle-loan", label: "Vehicle loan" },
+  { value: "home-loan", label: "Home loan" },
+  { value: "business-loan", label: "Business loan" },
+  { value: "app-loan", label: "App loan" },
+  { value: "credit-card", label: "Credit card" },
+  { value: "bnpl", label: "BNPL" },
+  { value: "informal-loan", label: "Informal loan" },
+  { value: "other", label: "Other" },
 ];
 
 function NumberField({
@@ -208,6 +231,9 @@ function ModuleFields({
     case "debt-schedule":
       return <div className="debt-list">
         {(input.activeDebts ?? []).map((debt, index) => <div className="debt-row" key={`${debt.label}-${index}`}>
+          <SelectField label="Debt type" value={debt.type ?? "other"} options={debtTypeOptions} onChange={(type) => {
+            const debts = [...(input.activeDebts ?? [])]; debts[index] = { ...debt, type }; update({ activeDebts: debts });
+          }} />
           <input aria-label={`Debt ${index + 1} name`} value={debt.label} onChange={(event) => {
             const debts = [...(input.activeDebts ?? [])];
             debts[index] = { ...debt, label: event.target.value };
@@ -226,12 +252,18 @@ function ModuleFields({
             const debts = [...(input.activeDebts ?? [])]; debts[index] = { ...debt, monthsLeft: value }; update({ activeDebts: debts });
           }} />
         </div>)}
-        <button type="button" className="text-button" onClick={() => update({ activeDebts: [...(input.activeDebts ?? []), { label: `Debt ${(input.activeDebts?.length ?? 0) + 1}`, balance: 0, emi: 0 }] })}>+ Add a debt</button>
+        <button type="button" className="text-button" onClick={() => update({ activeDebts: [...(input.activeDebts ?? []), { label: `Debt ${(input.activeDebts?.length ?? 0) + 1}`, type: "other", balance: 0, emi: 0 }] })}>+ Add a debt</button>
       </div>;
     case "card-behaviour":
-      return <div className="field-grid two">
-        <NumberField label="Credit-card utilisation" suffix="%" min={0} max={100} value={input.cardUtilisationPercent} onChange={(cardUtilisationPercent) => update({ cardUtilisationPercent })} />
-        <YesNo label="Paid in full each month?" value={input.cardPaidInFull} onChange={(cardPaidInFull) => update({ cardPaidInFull })} />
+      return <div className="stack-sm">
+        <YesNo label="Do you currently use a credit card or BNPL?" value={input.hasCreditCardOrBnpl} onChange={(hasCreditCardOrBnpl) => update({
+          hasCreditCardOrBnpl,
+          ...(hasCreditCardOrBnpl ? {} : { cardUtilisationPercent: undefined, cardPaidInFull: undefined }),
+        })} />
+        {input.hasCreditCardOrBnpl && <div className="field-grid two">
+          <NumberField label="Credit-card utilisation" suffix="%" min={0} max={100} value={input.cardUtilisationPercent} onChange={(cardUtilisationPercent) => update({ cardUtilisationPercent })} />
+          <YesNo label="Paid in full each month?" value={input.cardPaidInFull} onChange={(cardPaidInFull) => update({ cardPaidInFull })} />
+        </div>}
       </div>;
     case "delinquency-detail": {
       const current = input.delinquency ?? { monthsAgo: 1, unresolvedAmount: 0, resolved: false };
@@ -299,8 +331,8 @@ export function AssessmentFlow({ initialInput, persona, onBack, onComplete }: Pr
   const activeModules = useMemo(() => activeAdaptiveModules(input), [input]);
 
   const validate = () => {
-    if (step === 0 && (!input.purpose.trim() || input.requestedAmount <= 0 || input.age < 18 || input.age > 80)) {
-      return "Add the purpose, a valid amount, and an age between 18 and 80.";
+    if (step === 0 && (input.purposeUses.length === 0 || !input.purpose.trim() || input.requestedAmount <= 0 || input.age < 18 || input.age > 80)) {
+      return "Select at least one use, add a short purpose, a valid amount, and an age between 18 and 80.";
     }
     if (step === 1 && (input.monthlyIncome.min <= 0 || input.monthlyIncome.max < input.monthlyIncome.min || input.essentialExpenses <= 0)) {
       return "Add an honest income range and essential monthly expenses.";
@@ -372,9 +404,29 @@ export function AssessmentFlow({ initialInput, persona, onBack, onComplete }: Pr
           </div>
 
           {step === 0 && <div className="form-body stack-lg">
+            <fieldset className="choice-field">
+              <legend>1. What will the money be used for? Select all that apply.</legend>
+              <div className="choice-cards four">
+                {purposeOptions.map((option) => {
+                  const selected = input.purposeUses.includes(option.value);
+                  return <button
+                    key={option.value}
+                    type="button"
+                    className={selected ? "active" : ""}
+                    aria-pressed={selected}
+                    onClick={() => update({
+                      purposeUses: selected
+                        ? input.purposeUses.filter((use) => use !== option.value)
+                        : [...input.purposeUses, option.value],
+                    })}
+                  >{option.label}</button>;
+                })}
+              </div>
+            </fieldset>
             <label className="field">
-              <span className="field-label">1. What is the money for?</span>
-              <textarea value={input.purpose} onChange={(event) => update({ purpose: event.target.value })} placeholder="For example, wedding expenses or a delivery vehicle" rows={3} />
+              <span className="field-label">Brief purpose</span>
+              <textarea value={input.purpose} onChange={(event) => update({ purpose: event.target.value })} placeholder="For example, wedding expenses or a second stock line" rows={3} />
+              <span className="field-hint">This note helps explain your answer. Product routing uses only the selections above.</span>
             </label>
             <div className="field-grid two">
               <NumberField label="2. Requested amount" prefix="₹" step={5_000} value={input.requestedAmount || undefined} onChange={(requestedAmount) => update({ requestedAmount: requestedAmount ?? 0 })} />

@@ -8,6 +8,7 @@ export type AssessmentIssue = {
 export function validateAssessment(input: AssessmentInput): AssessmentIssue[] {
   const issues: AssessmentIssue[] = [];
 
+  if (input.purposeUses.length === 0) issues.push({ field: "purposeUses", message: "Select at least one use for the money." });
   if (!input.purpose.trim()) issues.push({ field: "purpose", message: "Add the borrowing purpose." });
   if (!Number.isFinite(input.requestedAmount) || input.requestedAmount <= 0) issues.push({ field: "requestedAmount", message: "Requested amount must be greater than zero." });
   if (!Number.isFinite(input.age) || input.age < 18 || input.age > 80) issues.push({ field: "age", message: "Age must be between 18 and 80." });
@@ -46,7 +47,10 @@ export function validateAssessment(input: AssessmentInput): AssessmentIssue[] {
   if (input.activeDebts?.some((debt) => debt.balance < 0 || debt.emi < 0 || (debt.annualRate ?? 0) < 0 || (debt.monthsLeft ?? 1) < 1)) {
     issues.push({ field: "activeDebts", message: "Debt balances, EMIs, rates, and remaining months cannot be negative or invalid." });
   }
+  const declaredCardDebt = input.activeDebts?.some((debt) => debt.type === "credit-card" || debt.type === "bnpl");
+  if (input.hasCreditCardOrBnpl === false && (declaredCardDebt || input.cardUtilisationPercent !== undefined || input.cardPaidInFull !== undefined)) {
+    issues.push({ field: "cardBehaviour", message: "The card/BNPL answer conflicts with the debt details; reconcile them before continuing." });
+  }
 
   return issues;
 }
-

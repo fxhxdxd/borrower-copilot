@@ -76,7 +76,7 @@ describe("adaptive module counterfactual contracts", () => {
   it("revolving high-utilisation card debt can activate a hard stop", () => {
     const base = delinquencyTestInput();
     expect(assessBorrower(base).verdict).not.toBe("DONT_BORROW");
-    expect(assessBorrower({ ...base, cardUtilisationPercent: 90, cardPaidInFull: false }).verdict).toBe("DONT_BORROW");
+    expect(assessBorrower({ ...base, hasCreditCardOrBnpl: true, cardUtilisationPercent: 90, cardPaidInFull: false }).verdict).toBe("DONT_BORROW");
   });
 
   it("delinquency recency and resolution change the hard-stop decision", () => {
@@ -101,7 +101,7 @@ describe("adaptive module counterfactual contracts", () => {
   });
 
   it("property price and down payment cap home-loan capacity", () => {
-    const home: AssessmentInput = { ...priya, purpose: "Buy a home", consideredProduct: "home", requestedAmount: 5_000_000, propertyPurchase: { price: 5_500_000, downPayment: 500_000 } };
+    const home: AssessmentInput = { ...priya, purpose: "Buy a home", purposeUses: ["home-purchase"], consideredProduct: "home", requestedAmount: 5_000_000, propertyPurchase: { price: 5_500_000, downPayment: 500_000 } };
     const largerDownPayment = assessBorrower({ ...home, propertyPurchase: { price: 5_500_000, downPayment: 2_500_000 } });
     expect(largerDownPayment.lenderAmount.max).toBeLessThanOrEqual(3_000_000);
   });

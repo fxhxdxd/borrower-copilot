@@ -1,7 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import App from "./App";
+
+afterEach(cleanup);
 
 async function runGuidedCase(name: "Priya" | "Ravi" | "Anita") {
   const user = userEvent.setup();
@@ -14,6 +16,24 @@ async function runGuidedCase(name: "Priya" | "Ravi" | "Anita") {
 }
 
 describe("guided borrower smoke tests", () => {
+  it("makes Ravi's vehicle signal visible before adapting and skips irrelevant card questions", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Ravi/ }));
+
+    expect(screen.getByRole("button", { name: "Stock / working capital" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Vehicle" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    const split = screen.getByText("Split the business need");
+    const vehicle = screen.getByText("Vehicle details");
+    expect(split.compareDocumentPosition(vehicle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText("Credit card or BNPL")).not.toBeInTheDocument();
+  });
+
   it("takes Priya to a Borrow result and card", async () => {
     await runGuidedCase("Priya");
     expect(screen.getByRole("heading", { name: "Borrow." })).toBeInTheDocument();
@@ -34,4 +54,3 @@ describe("guided borrower smoke tests", () => {
     expect(screen.getByText(/another EMI is unsafe/i)).toBeInTheDocument();
   });
 });
-

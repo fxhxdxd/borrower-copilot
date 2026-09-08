@@ -1,6 +1,14 @@
 export type Interval = { min: number; max: number };
 
 export type IncomeType = "salaried" | "self-employed" | "informal" | "mixed";
+export type BorrowingUse =
+  | "personal-expense"
+  | "debt-consolidation"
+  | "working-capital"
+  | "equipment"
+  | "vehicle"
+  | "home-purchase"
+  | "other";
 export type ProductId =
   | "not-sure"
   | "personal"
@@ -29,6 +37,7 @@ export type VehicleDetails = {
 
 export type ActiveDebt = {
   label: string;
+  type?: "personal-loan" | "vehicle-loan" | "home-loan" | "business-loan" | "app-loan" | "credit-card" | "bnpl" | "informal-loan" | "other";
   balance: number;
   emi: number;
   annualRate?: number;
@@ -40,6 +49,7 @@ export type AssessmentInput = {
   name?: string;
   city?: string;
   purpose: string;
+  purposeUses: BorrowingUse[];
   requestedAmount: number;
   consideredProduct: ProductId;
   age: number;
@@ -73,6 +83,7 @@ export type AssessmentInput = {
   emergencySavingsMonths?: number;
   upcomingExpense?: { amount: number; monthsUntilDue: number };
   activeDebts?: ActiveDebt[];
+  hasCreditCardOrBnpl?: boolean;
   cardUtilisationPercent?: number;
   cardPaidInFull?: boolean;
   delinquency?: {

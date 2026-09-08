@@ -17,6 +17,7 @@ export const PERSONAS: PersonaPreset[] = [
       name: "Priya",
       city: "Bengaluru",
       purpose: "Wedding",
+      purposeUses: ["personal-expense"],
       requestedAmount: 800_000,
       consideredProduct: "personal",
       age: 29,
@@ -27,7 +28,7 @@ export const PERSONAS: PersonaPreset[] = [
       creditStatus: { kind: "exact", score: 780 },
       employmentStatus: "permanent",
       employmentMonths: 60,
-      activeDebts: [{ label: "Car loan", balance: 336_000, emi: 14_000, monthsLeft: 24 }],
+      activeDebts: [{ label: "Car loan", type: "vehicle-loan", balance: 336_000, emi: 14_000, monthsLeft: 24 }],
     },
     knownFacts: ["₹1,10,000 net salary", "₹14,000 car EMI", "780 score", "₹28,000 rent", "₹8L request"],
     assumptionLabels: ["Other essentials ₹17,000/month", "No recent payment issue", "Six months of emergency savings"],
@@ -35,6 +36,7 @@ export const PERSONAS: PersonaPreset[] = [
       name: "Priya",
       city: "Bengaluru",
       purpose: "Wedding",
+      purposeUses: ["personal-expense"],
       requestedAmount: 800_000,
       consideredProduct: "personal",
       age: 29,
@@ -51,7 +53,7 @@ export const PERSONAS: PersonaPreset[] = [
       otherHouseholdIncome: 0,
       dependants: 0,
       emergencySavingsMonths: 6,
-      activeDebts: [{ label: "Car loan", balance: 336_000, emi: 14_000, monthsLeft: 24 }],
+      activeDebts: [{ label: "Car loan", type: "vehicle-loan", balance: 336_000, emi: 14_000, monthsLeft: 24 }],
     },
   },
   {
@@ -61,6 +63,7 @@ export const PERSONAS: PersonaPreset[] = [
       name: "Ravi",
       city: "Mysuru",
       purpose: "Second stock line and a delivery vehicle",
+      purposeUses: ["working-capital", "vehicle"],
       requestedAmount: 1_500_000,
       consideredProduct: "business",
       age: 42,
@@ -82,11 +85,12 @@ export const PERSONAS: PersonaPreset[] = [
       },
     },
     knownFacts: ["₹40k–₹80k cash income", "₹4.2L ITR", "₹45L unencumbered shop", "No credit history", "₹15L request"],
-    assumptionLabels: ["₹25,000 essentials", "₹5L vehicle + ₹10L stock split", "Two months of emergency savings", "No recent payment issue"],
+    assumptionLabels: ["₹25,000 essentials", "₹5L vehicle + ₹10L stock split", "New ₹6L LCV with ₹1L down payment", "Two months of emergency savings", "No recent payment issue"],
     walkthrough: {
       name: "Ravi",
       city: "Mysuru",
       purpose: "Second stock line and a delivery vehicle",
+      purposeUses: ["working-capital", "vehicle"],
       requestedAmount: 1_500_000,
       consideredProduct: "business",
       age: 42,
@@ -131,6 +135,7 @@ export const PERSONAS: PersonaPreset[] = [
       name: "Anita",
       city: "Hubballi",
       purpose: "Electric scooter to increase delivery runs",
+      purposeUses: ["vehicle"],
       requestedAmount: 150_000,
       consideredProduct: "two-wheeler",
       age: 35,
@@ -146,6 +151,7 @@ export const PERSONAS: PersonaPreset[] = [
       name: "Anita",
       city: "Hubballi",
       purpose: "Electric scooter to increase delivery runs",
+      purposeUses: ["vehicle"],
       requestedAmount: 150_000,
       consideredProduct: "two-wheeler",
       age: 35,
@@ -162,9 +168,9 @@ export const PERSONAS: PersonaPreset[] = [
       dependants: 3,
       emergencySavingsMonths: 0,
       activeDebts: [
-        { label: "App loan 1", balance: 15_000, emi: 2_500, annualRate: 32, highCost: true },
-        { label: "App loan 2", balance: 12_000, emi: 2_000, annualRate: 34, highCost: true },
-        { label: "App loan 3", balance: 8_000, emi: 1_500, annualRate: 30, highCost: true },
+        { label: "App loan 1", type: "app-loan", balance: 15_000, emi: 2_500, annualRate: 32, highCost: true },
+        { label: "App loan 2", type: "app-loan", balance: 12_000, emi: 2_000, annualRate: 34, highCost: true },
+        { label: "App loan 3", type: "app-loan", balance: 8_000, emi: 1_500, annualRate: 30, highCost: true },
       ],
       delinquency: { monthsAgo: 1, unresolvedAmount: 2_500, resolved: false },
       vehicle: {
@@ -181,4 +187,3 @@ export const PERSONAS: PersonaPreset[] = [
 ];
 
 export const WALKTHROUGH_INPUTS = Object.fromEntries(PERSONAS.map((persona) => [persona.id, persona.walkthrough]));
-

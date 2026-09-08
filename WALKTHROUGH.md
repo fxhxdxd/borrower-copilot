@@ -12,7 +12,7 @@ Point to the sample amount bars. The product never collapses approval and safety
 
 Choose **Priya**.
 
-“The ten core questions always produce an answer. Exact values and honest ranges are both first-class. Zero debt requires an explicit confirmation. Credit accepts an exact score, band, no history, or unknown.”
+“The ten core questions always produce an answer. Question one uses visible purpose selections for routing, while the short note is explanation only. Exact values and honest ranges are both first-class. Zero debt requires an explicit confirmation. Credit accepts an exact score, band, no history, or unknown.”
 
 Move to “Sharpen the answer.”
 
@@ -38,10 +38,12 @@ Return home and choose **Ravi**. Continue to the adaptive step.
 
 Show:
 
+- “Stock / working capital” and “Vehicle” are visibly selected before follow-ups; no free-text keyword or preset identity controls routing.
 - ITR income and net profit are distinct from turnover.
 - His wife's ₹18,000 is household context, not repayment income until a documented and willing co-applicant is confirmed.
 - The ₹15L need is split into ₹5L vehicle and ₹10L stock.
 - New versus used commercial vehicle selects a different rate/LTV envelope.
+- The card/BNPL module is absent because Ravi reports no formal credit history and confirms zero current debt.
 
 Open the result.
 

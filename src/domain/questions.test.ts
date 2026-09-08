@@ -31,9 +31,51 @@ describe("question registry contracts", () => {
     expect(ids).not.toContain("property-purchase");
   });
 
+  it("does not infer vehicle routing from free-text keywords", () => {
+    const input = {
+      ...WALKTHROUGH_INPUTS.priya,
+      purpose: "Maybe buy a delivery vehicle",
+      purposeUses: ["personal-expense" as const],
+      consideredProduct: "personal" as const,
+      vehicle: undefined,
+      businessSplit: undefined,
+    };
+    expect(activeAdaptiveModules(input).map((module) => module.id)).not.toContain("vehicle");
+  });
+
+  it("reveals vehicle details only after a structured vehicle signal", () => {
+    const businessOnly = {
+      ...WALKTHROUGH_INPUTS.ravi,
+      purposeUses: ["working-capital" as const],
+      businessSplit: { workingCapital: 1_500_000, equipment: 0, vehicle: 0 },
+      vehicle: undefined,
+    };
+    expect(activeAdaptiveModules(businessOnly).map((module) => module.id)).not.toContain("vehicle");
+    expect(activeAdaptiveModules({
+      ...businessOnly,
+      businessSplit: { workingCapital: 1_000_000, equipment: 0, vehicle: 500_000 },
+    }).map((module) => module.id)).toContain("vehicle");
+  });
+
+  it("does not ask a confirmed no-history borrower about credit cards", () => {
+    const ids = activeAdaptiveModules({
+      ...WALKTHROUGH_INPUTS.ravi,
+      hasCreditCardOrBnpl: undefined,
+      activeDebts: undefined,
+    }).map((module) => module.id);
+    expect(ids).not.toContain("card-behaviour");
+  });
+
+  it("restores card questions when a card or BNPL facility is explicitly declared", () => {
+    const ids = activeAdaptiveModules({
+      ...WALKTHROUGH_INPUTS.ravi,
+      activeDebts: [{ label: "Card", type: "credit-card", balance: 25_000, emi: 2_000 }],
+    }).map((module) => module.id);
+    expect(ids).toContain("card-behaviour");
+  });
+
   it("asks Anita for delinquency detail only because a payment issue is present", () => {
     expect(activeAdaptiveModules(WALKTHROUGH_INPUTS.anita).map((module) => module.id)).toContain("delinquency-detail");
     expect(activeAdaptiveModules(WALKTHROUGH_INPUTS.priya).map((module) => module.id)).not.toContain("delinquency-detail");
   });
 });
-

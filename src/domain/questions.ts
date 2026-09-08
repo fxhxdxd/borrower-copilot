@@ -22,7 +22,7 @@ const field = (id: string, label: string, ...outputDependencies: string[]): Ques
 });
 
 export const CORE_QUESTIONS: QuestionField[] = [
-  field("purpose", "What is the money for?", "product route", "alternatives"),
+  field("purpose", "What will the money be used for?", "product route", "alternatives"),
   field("requestedAmount", "How much do you want to borrow?", "verdict", "requested EMI"),
   field("consideredProduct", "Which loan are you considering?", "product mismatch", "rate band"),
   field("age", "How old are you?", "maximum tenure", "amount range"),
@@ -149,6 +149,7 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
     applies: (input) => (input.currentDebtPayments ?? 0) > 0,
     fields: [
       field("activeDebts.balance", "Outstanding balance", "next action"),
+      field("activeDebts.type", "Debt type", "follow-up routing", "hard-stop evidence"),
       field("activeDebts.emi", "Monthly EMI", "EMI reconciliation", "capacity"),
       field("activeDebts.annualRate", "Annual rate", "high-cost debt count", "hard stop"),
       field("activeDebts.monthsLeft", "Remaining months", "wait alternative", "action"),
@@ -156,11 +157,16 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
   },
   {
     id: "card-behaviour",
-    title: "Credit-card behaviour",
-    why: "High utilisation or revolving balances changes the debt-cleanup action.",
+    title: "Credit card or BNPL",
+    why: "Asked only when credit use is possible; revolving high utilisation changes the debt-cleanup action.",
     priority: "hard-stop",
-    applies: () => true,
+    applies: (input) => Boolean(
+      input.hasCreditCardOrBnpl === true ||
+      input.activeDebts?.some((debt) => debt.type === "credit-card" || debt.type === "bnpl") ||
+      (input.creditStatus && input.creditStatus.kind !== "no-history"),
+    ),
     fields: [
+      field("hasCreditCardOrBnpl", "Currently uses a credit card or BNPL", "follow-up routing", "hard-stop evidence"),
       field("cardUtilisationPercent", "Credit-card utilisation", "action", "confidence"),
       field("cardPaidInFull", "Paid in full each month?", "high-cost debt status", "verdict"),
     ],
@@ -197,7 +203,13 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
     title: "Vehicle details",
     why: "Class, use, condition and contribution select a materially different product and amount cap.",
     priority: "routing",
-    applies: (input) => Boolean(input.purpose?.toLowerCase().includes("vehicle") || input.purpose?.toLowerCase().includes("scooter") || input.purpose?.toLowerCase().includes("car") || input.consideredProduct === "two-wheeler" || input.consideredProduct === "car" || input.consideredProduct === "commercial-vehicle"),
+    applies: (input) => Boolean(
+      input.purposeUses?.includes("vehicle") ||
+      (input.businessSplit?.vehicle ?? 0) > 0 ||
+      input.consideredProduct === "two-wheeler" ||
+      input.consideredProduct === "car" ||
+      input.consideredProduct === "commercial-vehicle"
+    ),
     fields: [
       field("vehicle.class", "Vehicle class", "product route", "rate band"),
       field("vehicle.use", "Primary use", "product route", "upside treatment"),
@@ -211,7 +223,7 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
     title: "Home or property purchase",
     why: "Purchase price and own contribution cap the home-loan amount.",
     priority: "routing",
-    applies: (input) => Boolean(input.consideredProduct === "home" || input.purpose?.toLowerCase().includes("home")),
+    applies: (input) => Boolean(input.consideredProduct === "home" || input.purposeUses?.includes("home-purchase")),
     fields: [
       field("propertyPurchase.price", "Purchase price", "LTV cap"),
       field("propertyPurchase.downPayment", "Down payment", "amount cap"),
@@ -222,7 +234,11 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
     title: "Split the business need",
     why: "Routes stock and vehicle portions separately while preserving one shared EMI ceiling.",
     priority: "routing",
-    applies: (input) => Boolean(input.consideredProduct === "business" || input.purpose?.toLowerCase().includes("stock") || input.purpose?.toLowerCase().includes("business")),
+    applies: (input) => Boolean(
+      input.consideredProduct === "business" ||
+      input.purposeUses?.includes("working-capital") ||
+      input.purposeUses?.includes("equipment")
+    ),
     fields: [
       field("businessSplit.workingCapital", "Working-capital amount", "component route", "blended EMI"),
       field("businessSplit.equipment", "Equipment amount", "component route", "blended EMI"),
@@ -234,7 +250,12 @@ export const ADAPTIVE_MODULES: QuestionModule[] = [
     title: "Expected income uplift",
     why: "Shows productive upside without allowing uncertain future income into base affordability.",
     priority: "burden",
-    applies: (input) => Boolean(input.vehicle?.use === "income-generating" || input.purpose?.toLowerCase().includes("business") || input.purpose?.toLowerCase().includes("stock")),
+    applies: (input) => Boolean(
+      input.vehicle?.use === "income-generating" ||
+      input.vehicle?.use === "business" ||
+      input.purposeUses?.includes("working-capital") ||
+      input.purposeUses?.includes("equipment")
+    ),
     fields: [
       field("expectedNetIncomeUplift", "Expected net monthly uplift", "upside scenario"),
       field("upliftEvidence", "Evidence quality", "upside confidence"),
@@ -249,7 +270,15 @@ const priorityOrder: Record<QuestionModule["priority"], number> = {
   burden: 3,
 };
 
+const routingOrder: Record<string, number> = {
+  "business-split": 0,
+  vehicle: 1,
+  "property-purchase": 2,
+  collateral: 3,
+};
+
 export const activeAdaptiveModules = (input: Partial<AssessmentInput>) =>
   ADAPTIVE_MODULES.filter((module) => module.applies(input)).sort(
-    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority],
+    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority] ||
+      (routingOrder[a.id] ?? 99) - (routingOrder[b.id] ?? 99),
   );
